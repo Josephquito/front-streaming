@@ -40,8 +40,8 @@
     </div>
   </div>
 
-  <!-- Botón fijo "+ Plataforma" -->
-  <button class="btn btn-success shrink-0" (click)="mostrarModal = true">
+  <!-- Botón fijo "Plataforma" -->
+  <button class="btn btn-neutral" (click)="mostrarModal = true" *ngIf="isAdmin">
     +
   </button>
 </div>
@@ -131,5 +131,278 @@
         <button class="btn btn-primary" [disabled]="!form.valid">Crear</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Fila buscador + botón -->
+<div class="flex items-center gap-4 my-4 px-4">
+  <!-- Buscador -->
+  <label
+    class="input input-bordered flex items-center gap-2 flex-grow max-w-md"
+  >
+    <svg
+      class="w-5 h-5 text-gray-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+
+    <input
+      type="text"
+      [(ngModel)]="busquedaGlobal"
+      (input)="actualizarCuentasMostradas()"
+      placeholder="Buscar correo..."
+      class="grow"
+    />
+  </label>
+
+  <!-- Botón a la derecha -->
+  <button class="btn btn-neutral" (click)="abrirModalCuenta()">+ Cuenta</button>
+</div>
+
+<div class="p-4 overflow-x-auto">
+  <table class="table w-full">
+    <thead>
+      <tr class="bg-gray-100 text-left">
+        <th>Servicio</th>
+        <th>Tiempo</th>
+        <th>Correo</th>
+        <th>Clave</th>
+        <th>Usados</th>
+        <th>Costo</th>
+        <th>Proveedor</th>
+        <th>Compra</th>
+        <th>Tiempo</th>
+        <th>Corte</th>
+        <th>Acciones</th>
+        <th>#</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let cuenta of cuentasMostradas; let i = index"
+        class="hover:bg-gray-50"
+      >
+        <td>{{ cuenta.plataforma?.nombre || "—" }}</td>
+
+        <td>
+          <span
+            [ngClass]="{
+              'text-red-600 font-bold': diasRestantes(cuenta.fecha_corte) <= 3,
+              'text-yellow-600':
+                diasRestantes(cuenta.fecha_corte) > 3 &&
+                diasRestantes(cuenta.fecha_corte) <= 7,
+              'text-green-600': diasRestantes(cuenta.fecha_corte) > 7
+            }"
+          >
+            {{ diasRestantes(cuenta.fecha_corte) }} días
+          </span>
+        </td>
+
+        <td>{{ cuenta.correo }}</td>
+
+        <!-- Clave editable -->
+        <td>
+          <ng-container *ngIf="editandoId === cuenta.id; else claveTexto">
+            <input
+              [(ngModel)]="cuenta.clave"
+              class="input input-sm w-full"
+              (blur)="guardarCambios(cuenta)"
+              (keydown.enter)="guardarCambios(cuenta)"
+            />
+          </ng-container>
+          <ng-template #claveTexto>{{ cuenta.clave }}</ng-template>
+        </td>
+
+        <!-- Usados -->
+        <td>{{ cuenta.perfiles_usados }} de {{ cuenta.numero_perfiles }}</td>
+
+        <!-- Costo editable -->
+        <td>
+          <ng-container *ngIf="editandoId === cuenta.id; else costoTexto">
+            <input
+              type="number"
+              [(ngModel)]="cuenta.costo_total"
+              class="input input-sm w-full"
+              (blur)="guardarCambios(cuenta)"
+              (keydown.enter)="guardarCambios(cuenta)"
+            />
+          </ng-container>
+          <ng-template #costoTexto>$ {{ cuenta.costo_total }}</ng-template>
+        </td>
+
+        <td>{{ cuenta.proveedor }}</td>
+
+        <!-- Compra editable -->
+        <td>
+          <ng-container *ngIf="editandoId === cuenta.id; else compraTexto">
+            <input
+              type="date"
+              [(ngModel)]="cuenta.fecha_compra"
+              class="input input-sm w-full"
+              (blur)="guardarCambios(cuenta)"
+              (keydown.enter)="guardarCambios(cuenta)"
+            />
+          </ng-container>
+          <ng-template #compraTexto>
+            {{ cuenta.fecha_compra | date : "shortDate" }}
+          </ng-template>
+        </td>
+
+        <!-- Tiempo asignado editable -->
+        <td>
+          <ng-container *ngIf="editandoId === cuenta.id; else tiempoTexto">
+            <input
+              [(ngModel)]="cuenta.tiempo_asignado"
+              class="input input-sm w-full"
+              (blur)="guardarCambios(cuenta)"
+              (keydown.enter)="guardarCambios(cuenta)"
+            />
+          </ng-container>
+          <ng-template #tiempoTexto>{{ cuenta.tiempo_asignado }}</ng-template>
+        </td>
+
+        <td>{{ cuenta.fecha_corte | date : "shortDate" }}</td>
+
+        <!-- Acciones -->
+        <td class="whitespace-nowrap space-x-1">
+          <ng-container *ngIf="editandoId === cuenta.id; else botonesNormales">
+            <button
+              class="btn btn-sm btn-success"
+              (click)="guardarCambios(cuenta)"
+              title="Guardar"
+            >
+              💾
+            </button>
+            <button
+              class="btn btn-sm btn-outline"
+              (click)="cancelarEdicion()"
+              title="Cancelar"
+            >
+              ❌
+            </button>
+          </ng-container>
+          <ng-template #botonesNormales>
+            <button
+              class="btn btn-sm btn-outline"
+              (click)="iniciarEdicion(cuenta.id)"
+              title="Editar"
+            >
+              ✏️
+            </button>
+            <button
+              class="btn btn-sm btn-outline text-red-600"
+              (click)="eliminarCuenta(cuenta.id)"
+              title="Eliminar"
+              *ngIf="isAdmin"
+            >
+              🗑️
+            </button>
+          </ng-template>
+        </td>
+
+        <td>{{ i + 1 }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Modal de cuenta -->
+  <div
+    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    *ngIf="mostrarModalCuenta"
+  >
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">Agregar cuenta</h2>
+
+      <div class="space-y-3">
+        <!-- Correo -->
+        <input
+          [(ngModel)]="nuevaCuenta.correo"
+          placeholder="Correo"
+          class="input input-bordered w-full"
+        />
+
+        <!-- Clave -->
+        <input
+          [(ngModel)]="nuevaCuenta.clave"
+          placeholder="Clave"
+          class="input input-bordered w-full"
+        />
+
+        <!-- Fila: Costo - Proveedor -->
+        <div class="flex gap-2">
+          <input
+            [(ngModel)]="nuevaCuenta.costo_total"
+            type="number"
+            placeholder="Costo $$"
+            class="input input-bordered w-1/2"
+          />
+          <input
+            [(ngModel)]="nuevaCuenta.proveedor"
+            placeholder="Proveedor"
+            class="input input-bordered w-1/2"
+          />
+        </div>
+
+        <!-- Fila: Número de perfiles - Fecha -->
+        <div class="flex gap-2">
+          <div class="w-1/2">
+            <label class="label">
+              <span class="label-text">N° de perfiles</span>
+            </label>
+            <input
+              [(ngModel)]="nuevaCuenta.numero_perfiles"
+              type="number"
+              placeholder="Ej: 5"
+              class="input input-bordered w-full"
+            />
+          </div>
+
+          <div class="w-1/2">
+            <label class="label">
+              <span class="label-text">Fecha de compra</span>
+            </label>
+            <input
+              [(ngModel)]="nuevaCuenta.fecha_compra"
+              type="date"
+              class="input input-bordered w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Tiempo asignado -->
+        <input
+          [(ngModel)]="nuevaCuenta.tiempo_asignado"
+          placeholder="Ej: 2 meses, 15 días"
+          class="input input-bordered w-full"
+        />
+
+        <!-- Selector de plataforma -->
+        <select
+          [(ngModel)]="nuevaCuenta.plataformaId"
+          class="select select-bordered w-full"
+        >
+          <option [ngValue]="null" disabled selected>
+            Selecciona plataforma
+          </option>
+          <option
+            *ngFor="let plataforma of plataformas"
+            [value]="plataforma.id"
+          >
+            {{ plataforma.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <div class="flex justify-end mt-4 space-x-2">
+        <button class="btn btn-success" (click)="crearCuenta()">Guardar</button>
+        <button class="btn btn-outline" (click)="cerrarModalCuenta()">
+          Cancelar
+        </button>
+      </div>
+    </div>
   </div>
 </div>

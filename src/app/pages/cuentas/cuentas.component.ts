@@ -9,6 +9,7 @@ import {
 } from '../../services/plataformas.service';
 import { FormsModule } from '@angular/forms';
 import { HostListener, ElementRef, ViewChild } from '@angular/core';
+import { CuentasService } from '../../services/cuentas.service';
 
 @Component({
   selector: 'app-cuentas',
@@ -22,11 +23,16 @@ export class CuentasComponent implements OnInit {
   plataformas: Plataforma[] = [];
   seleccionada: string = 'todas';
   mostrarModal = false;
+  editandoId: number | null = null;
+  busquedaGlobal: string = '';
+  cuentasMostradas: any[] = [];
 
   plataforma = {
     nombre: '',
     color: '#000000', // valor por defecto
   };
+
+  cuentas: any[] = [];
 
   colores = [
     { nombre: 'Netflix (Rojo)', hex: '#E50914' },
@@ -46,6 +52,7 @@ export class CuentasComponent implements OnInit {
 
   constructor(
     private plataformasService: PlataformasService,
+    private cuentasService: CuentasService,
     private http: HttpClient,
     private auth: AuthService,
     private elementRef: ElementRef
@@ -68,6 +75,11 @@ export class CuentasComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPlataformas();
+    this.cargarCuentas();
+
+    // Fecha actual para fecha_compra
+    const hoy = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+    this.nuevaCuenta.fecha_compra = hoy;
   }
 
   cargarPlataformas() {
@@ -83,6 +95,8 @@ export class CuentasComponent implements OnInit {
 
   seleccionar(nombre: string, btnRef?: HTMLElement) {
     this.seleccionada = nombre;
+    this.busquedaGlobal = ''; // Limpiar búsqueda si cambias de plataforma
+    this.actualizarCuentasMostradas();
 
     if (btnRef) {
       setTimeout(() => {
@@ -91,7 +105,7 @@ export class CuentasComponent implements OnInit {
           inline: 'center',
           block: 'nearest',
         });
-      }, 50); // pequeño delay para asegurar render
+      }, 50);
     }
   }
 
@@ -149,6 +163,197 @@ export class CuentasComponent implements OnInit {
         error: (error) => {
           this.error = error?.error?.message || 'Error al eliminar plataforma';
           setTimeout(() => (this.error = ''), 4000);
+        },
+      });
+  }
+
+  actualizarCuentasMostradas() {
+    const termino = this.busquedaGlobal.trim().toLowerCase();
+
+    if (termino) {
+      this.cuentasMostradas = this.cuentas.filter((c) =>
+        c.correo.toLowerCase().includes(termino)
+      );
+      this.seleccionada = 'todas';
+    } else {
+      if (this.seleccionada === 'todas') {
+        this.cuentasMostradas = this.cuentas;
+      } else {
+        this.cuentasMostradas = this.cuentas.filter(
+          (c) => c.plataforma?.nombre === this.seleccionada
+        );
+      }
+    }
+    // ✅ Aplicar el orden personalizado
+    this.cuentasMostradas = this.cuentasMostradas.sort((a, b) => {
+      const aLleno = a.perfiles_usados >= a.numero_perfiles;
+      const bLleno = b.perfiles_usados >= b.numero_perfiles;
+
+      if (aLleno && bLleno) return 0;
+      if (aLleno) return 1;
+      if (bLleno) return -1;
+
+      return b.perfiles_usados - a.perfiles_usados;
+    });
+  }
+
+  buscarPorCorreo() {
+    const termino = this.busquedaGlobal.trim().toLowerCase();
+
+    if (!termino) {
+      this.seleccionada = 'todas';
+      return;
+    }
+
+    const cuenta = this.cuentas.find((c) =>
+      c.correo.toLowerCase().includes(termino)
+    );
+
+    if (cuenta && cuenta.plataforma?.nombre) {
+      this.seleccionada = cuenta.plataforma.nombre;
+    } else {
+      this.seleccionada = 'todas'; // por si no encuentra nada
+    }
+  }
+
+  cargarCuentas() {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .get(`${environment.apiUrl}/cuentas/negocio`, { headers })
+      .subscribe({
+        next: (data: any) => {
+          this.cuentas = data;
+          this.actualizarCuentasMostradas();
+        },
+        error: () => {
+          console.error('❌ Error al cargar cuentas');
+        },
+      });
+  }
+
+  cuentasPlataform() {
+    if (this.seleccionada === 'todas') return this.cuentas;
+    return this.cuentas.filter(
+      (c) => c.plataforma?.nombre === this.seleccionada
+    );
+  }
+
+  diasRestantes(fechaCorte: string): number {
+    const hoy = new Date();
+    const corte = new Date(fechaCorte);
+    const diff = corte.getTime() - hoy.getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  editarCuenta(cuenta: any) {
+    // Aquí puedes abrir un modal de edición o redirigir a otra vista
+    console.log('Editar cuenta:', cuenta);
+  }
+
+  eliminarCuenta(id: number) {
+    const confirmar = confirm('¿Estás seguro de eliminar esta cuenta?');
+    if (!confirmar) return;
+
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .delete(`${environment.apiUrl}/cuentas/${id}`, { headers })
+      .subscribe({
+        next: () => {
+          this.cargarCuentas(); // si tienes método para recargar
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al eliminar cuenta');
+        },
+      });
+  }
+
+  iniciarEdicion(cuentaId: number) {
+    this.editandoId = cuentaId;
+  }
+
+  cancelarEdicion() {
+    this.editandoId = null;
+    this.cargarCuentas(); // recargar por si hubo cambios
+  }
+
+  guardarCambios(cuenta: any) {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    const dataActualizada = {
+      clave: cuenta.clave,
+      costo_total: cuenta.costo_total,
+      fecha_compra: cuenta.fecha_compra,
+      tiempo_asignado: cuenta.tiempo_asignado,
+    };
+
+    this.http
+      .patch(`${environment.apiUrl}/cuentas/${cuenta.id}`, dataActualizada, {
+        headers,
+      })
+      .subscribe({
+        next: () => {
+          this.editandoId = null;
+          this.cargarCuentas();
+        },
+        error: () => {
+          alert('Error al guardar cambios');
+        },
+      });
+  }
+
+  get isAdmin(): boolean {
+    return this.auth.getRole()?.toLowerCase() === 'admin';
+  }
+
+  mostrarModalCuenta = false;
+
+  nuevaCuenta: any = {
+    correo: '',
+    clave: '',
+    proveedor: '',
+    costo_total: null,
+    numero_perfiles: null,
+    fecha_compra: '',
+    tiempo_asignado: '',
+    plataformaId: null,
+  };
+
+  abrirModalCuenta() {
+    this.mostrarModalCuenta = true;
+    this.nuevaCuenta = {
+      correo: '',
+      clave: '',
+      proveedor: '',
+      costo_total: null,
+      numero_perfiles: null,
+      fecha_compra: '',
+      tiempo_asignado: '',
+      plataformaId: null,
+    };
+  }
+
+  cerrarModalCuenta() {
+    this.mostrarModalCuenta = false;
+  }
+
+  crearCuenta() {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .post(`${environment.apiUrl}/cuentas`, this.nuevaCuenta, { headers })
+      .subscribe({
+        next: () => {
+          this.cerrarModalCuenta();
+          this.cargarCuentas();
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al crear cuenta');
         },
       });
   }
