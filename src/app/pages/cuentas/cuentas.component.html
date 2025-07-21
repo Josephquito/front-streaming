@@ -1,1 +1,135 @@
-<p>cuentas works!</p>
+<div class="flex items-center gap-2 px-4">
+  <!-- Botón fijo "Todas" -->
+  <button
+    class="btn shrink-0"
+    [ngClass]="{
+      'btn-primary': seleccionada === 'todas',
+      'btn-outline': seleccionada !== 'todas'
+    }"
+    (click)="seleccionar('todas')"
+  >
+    Todas
+  </button>
+
+  <!-- Contenedor scroll solo para plataformas -->
+  <div class="overflow-x-auto flex-1">
+    <div class="inline-flex gap-2 py-4 whitespace-nowrap">
+      <button
+        *ngFor="let plataforma of plataformas"
+        class="btn"
+        #btnRef
+        [ngClass]="{
+          'btn-outline':
+            !plataforma.color && seleccionada !== plataforma.nombre,
+          'btn-primary': !plataforma.color && seleccionada === plataforma.nombre
+        }"
+        [ngStyle]="
+          plataforma.color
+            ? {
+                'background-color': plataforma.color,
+                color: '#fff',
+                border:
+                  seleccionada === plataforma.nombre ? '2px solid #000' : 'none'
+              }
+            : {}
+        "
+        (click)="seleccionar(plataforma.nombre, btnRef)"
+      >
+        {{ plataforma.nombre }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Botón fijo "+ Plataforma" -->
+  <button class="btn btn-success shrink-0" (click)="mostrarModal = true">
+    +
+  </button>
+</div>
+
+<hr />
+
+<!-- Mensaje inferior -->
+<div class="p-4 flex items-center justify-between">
+  <p class="text-gray-500 italic">
+    Mostrando cuentas de: <strong>{{ seleccionada }}</strong>
+  </p>
+
+  <!-- Botón de menú ⋮ -->
+  <div class="relative" *ngIf="seleccionada !== 'todas'" #menuOpciones>
+    <button
+      class="text-gray-600 hover:text-black text-xl px-2"
+      (click)="mostrarOpciones = !mostrarOpciones"
+    >
+      ⋮
+    </button>
+
+    <!-- Menú desplegable -->
+    <div
+      *ngIf="mostrarOpciones"
+      class="absolute right-0 mt-2 w-40 bg-white shadow-md border rounded z-50"
+    >
+      <button
+        class="block w-full text-left px-4 py-2 text-sm hover:bg-red-100 text-red-600"
+        (click)="eliminarSeleccionada()"
+      >
+        Eliminar plataforma
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="alert alert-error mt-2 text-sm">
+  {{ error }}
+</div>
+
+<!-- Modal de creación -->
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  *ngIf="mostrarModal"
+  (click)="cerrarModal()"
+>
+  <div
+    class="bg-white p-6 rounded-lg w-full max-w-md shadow-lg"
+    (click)="$event.stopPropagation()"
+  >
+    <h2 class="text-xl font-bold mb-4">Crear nueva plataforma</h2>
+
+    <form (ngSubmit)="crearPlataforma()" #form="ngForm" class="space-y-4">
+      <div>
+        <label class="block font-semibold">Nombre:</label>
+        <input
+          [(ngModel)]="plataforma.nombre"
+          name="nombre"
+          required
+          class="input input-bordered w-full"
+        />
+      </div>
+
+      <div class="mb-4">
+        <label class="block font-semibold mb-2">Color:</label>
+
+        <div class="grid grid-cols-6 gap-1 justify-center">
+          <button
+            type="button"
+            *ngFor="let c of colores"
+            class="w-9 h-9 rounded-full border-2 transition-all"
+            [ngStyle]="{
+              'background-color': c.hex,
+              'border-color': plataforma.color === c.hex ? '#000' : '#ccc',
+              transform: plataforma.color === c.hex ? 'scale(1.1)' : 'scale(1)'
+            }"
+            (click)="plataforma.color = c.hex"
+            [title]="c.nombre"
+          ></button>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" class="btn btn-outline" (click)="cerrarModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" [disabled]="!form.valid">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>

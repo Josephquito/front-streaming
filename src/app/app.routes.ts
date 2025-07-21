@@ -2,6 +2,9 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { authGuard } from './guards/auth.guard'; // 👈 asegúrate de importar el guard
 import { superAdminGuard } from './guards/superadmin.guard'; // 👈 asegúrate de importar el guard de super admin
+import { adminGuard } from './guards/admin.guard'; // 👈 asegúrate de importar el guard de admin
+import { empleadoGuard } from './guards/empleado.guard'; // 👈 asegúrate de importar el guard de empleado
+import { adminOempleadoGuard } from './guards/admin-empleado.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -39,6 +42,15 @@ export const routes: Routes = [
       import('./pages/usuarios/editar-admin/editar-admin.component').then(
         (m) => m.EditarAdminComponent
       ),
+  },
+
+  {
+    path: 'cuentas',
+    canActivate: [adminOempleadoGuard], // 👈 protección añadida
+    loadComponent: () =>
+      import('./pages/cuentas/cuentas.component').then(
+        (m) => m.CuentasComponent
+      ), // 👈 solo estos pueden acceder
   },
   // Ruta wildcard opcional para rutas no existentes
   { path: '**', redirectTo: 'login' },

@@ -7,6 +7,7 @@ import { AuthService } from '../guards/auth.service';
 export interface Plataforma {
   id: number;
   nombre: string;
+  color: string;
 }
 
 @Injectable({ providedIn: 'root' })
