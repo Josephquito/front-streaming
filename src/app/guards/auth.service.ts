@@ -1,3 +1,4 @@
+//src/app/guards/auth.service.ts
 import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -28,7 +29,7 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    return this.isBrowser() && localStorage.getItem(this.roleKey) === 'ADMIN';
+    return this.isBrowser() && this.getRole()?.toLowerCase() === 'admin';
   }
 
   logout(): void {

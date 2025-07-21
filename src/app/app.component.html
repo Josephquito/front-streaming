@@ -1,1 +1,106 @@
-<router-outlet />
+<!-- Navbar -->
+<div class="navbar bg-base-100 shadow-sm">
+  <div class="flex-1">
+    <a routerLink="/inicio" class="btn btn-ghost text-xl"
+      >SISTEMA DE STREAMING</a
+    >
+  </div>
+
+  <!-- Versión móvil -->
+  <div class="flex-none lg:hidden">
+    <div class="dropdown dropdown-end">
+      <button type="button" class="btn btn-ghost btn-circle">
+        <!-- ícono -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          class="h-5 w-5"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+      <ul
+        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+      >
+        <ng-container *ngIf="!isLoggedIn">
+          <li>
+            <a
+              href="https://wa.me/593967020496"
+              target="_blank"
+              class="text-green-600 font-bold"
+              >Contratar</a
+            >
+          </li>
+        </ng-container>
+
+        <ng-container *ngIf="isLoggedIn">
+          <li *ngIf="isSuperAdmin">
+            <a routerLink="/registrar-admin">Registrar Admin</a>
+          </li>
+          <li>
+            <button (click)="logout()" class="text-red-500">
+              Cerrar sesión
+            </button>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Versión escritorio -->
+  <div class="flex-none hidden lg:flex">
+    <ul class="menu menu-horizontal px-1">
+      <ng-container *ngIf="!isLoggedIn">
+        <li>
+          <a
+            href="https://wa.me/593967020496"
+            target="_blank"
+            class="btn btn-success btn-sm text-white"
+            >Contratar</a
+          >
+        </li>
+      </ng-container>
+
+      <ng-container *ngIf="isLoggedIn">
+        <li *ngIf="isLoggedIn">
+          <a routerLink="/inicio">Inicio</a>
+        </li>
+        <li *ngIf="isAdmin || isEmpleado">
+          <a routerLink="/">Cuentas</a>
+        </li>
+        <li *ngIf="isAdmin || isEmpleado">
+          <a routerLink="/">Clientes</a>
+        </li>
+        <li *ngIf="isAdmin">
+          <a routerLink="/">Finanzas</a>
+        </li>
+        <li *ngIf="isAdmin">
+          <a routerLink="/">Empleados</a>
+        </li>
+        <li *ngIf="isSuperAdmin">
+          <a routerLink="/registrar-admin">Registrar Admin</a>
+        </li>
+        <li *ngIf="isSuperAdmin">
+          <a routerLink="/admins">Ver Admins</a>
+        </li>
+        <li>
+          <button
+            (click)="logout()"
+            class="btn btn-error btn-sm text-white ml-2"
+          >
+            Cerrar sesión
+          </button>
+        </li>
+      </ng-container>
+    </ul>
+  </div>
+</div>
+
+<router-outlet></router-outlet>

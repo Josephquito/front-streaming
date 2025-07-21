@@ -1,0 +1,103 @@
+<div class="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
+  <h2 class="text-2xl font-bold mb-6 text-center">Editar administrador</h2>
+
+  <form
+    (ngSubmit)="guardarCambios()"
+    #form="ngForm"
+    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+  >
+    <!-- Datos del admin -->
+    <div class="form-control">
+      <label class="label">Nombre</label>
+      <input
+        [(ngModel)]="admin.nombre"
+        name="nombre"
+        class="input input-bordered"
+        disabled
+      />
+    </div>
+
+    <div class="form-control">
+      <label class="label">Apellido</label>
+      <input
+        [(ngModel)]="admin.apellido"
+        name="apellido"
+        class="input input-bordered"
+        disabled
+      />
+    </div>
+
+    <div class="form-control md:col-span-2">
+      <label class="label">Correo</label>
+      <input
+        [(ngModel)]="admin.correo"
+        name="correo"
+        type="email"
+        class="input input-bordered w-full"
+        disabled
+      />
+    </div>
+
+    <!-- Teléfono del admin -->
+    <div class="form-control md:col-span-2">
+      <label class="label">Teléfono</label>
+      <input
+        [(ngModel)]="admin.telefono"
+        name="telefono"
+        class="input input-bordered w-full"
+      />
+    </div>
+
+    <!-- Datos del negocio -->
+    <div class="form-control md:col-span-2 mt-6">
+      <label class="label font-bold">Datos del negocio</label>
+    </div>
+
+    <!-- Nombre del negocio -->
+    <div class="form-control">
+      <label class="label">Nombre del negocio</label>
+      <input
+        [(ngModel)]="admin.negocio.nombre"
+        name="negocio_nombre"
+        class="input input-bordered"
+      />
+    </div>
+
+    <!-- Teléfono del negocio -->
+    <div class="form-control">
+      <label class="label">Teléfono del negocio</label>
+      <input
+        [(ngModel)]="admin.negocio.telefono"
+        name="negocio_telefono"
+        class="input input-bordered"
+      />
+    </div>
+
+    <div class="form-control md:col-span-2">
+      <label class="label">Correo de contacto</label>
+      <input
+        [(ngModel)]="admin.negocio.correo_contacto"
+        name="negocio_correo"
+        class="input input-bordered w-full"
+        type="email"
+      />
+    </div>
+
+    <!-- Botón y mensajes -->
+    <div class="md:col-span-2 mt-6 space-y-2">
+      <button
+        class="btn btn-primary w-full"
+        [disabled]="cargando || !form.valid"
+      >
+        {{ cargando ? "Guardando cambios..." : "Guardar cambios" }}
+      </button>
+
+      <div *ngIf="mensaje" class="alert alert-success text-sm">
+        {{ mensaje }}
+      </div>
+      <div *ngIf="error" class="alert alert-error text-sm">
+        {{ error }}
+      </div>
+    </div>
+  </form>
+</div>

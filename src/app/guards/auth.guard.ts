@@ -8,13 +8,12 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const router = inject(Router);
 
   const currentUrl = route.url.map((segment) => segment.path).join('/');
+
+  // Si va a /login y ya está autenticado → redirigir a /inicio
   if (currentUrl === 'login') {
-    return true;
+    return auth.isAuthenticated() ? router.parseUrl('/inicio') : true;
   }
 
-  if (auth.isAuthenticated()) {
-    return true;
-  }
-
-  return router.parseUrl('/login');
+  // Para cualquier otra ruta → permitir solo si está autenticado
+  return auth.isAuthenticated() ? true : router.parseUrl('/login');
 };

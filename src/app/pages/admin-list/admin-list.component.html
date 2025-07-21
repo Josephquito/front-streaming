@@ -1,0 +1,68 @@
+<!-- admin-list.component.html -->
+<div class="max-w-5xl mx-auto mt-8 p-4">
+  <h2 class="text-2xl font-bold mb-4 text-center">
+    Administradores registrados
+  </h2>
+
+  <div *ngIf="cargando" class="text-center">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!cargando && admins.length === 0" class="text-center">
+    No hay administradores registrados.
+  </div>
+
+  <div class="overflow-x-auto" *ngIf="admins.length > 0">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Negocio</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let admin of admins; index as i">
+          <td>{{ i + 1 }}</td>
+          <td>{{ admin.nombre }} {{ admin.apellido }}</td>
+          <td>{{ admin.correo }}</td>
+          <td>{{ admin.telefono || "—" }}</td>
+          <td>{{ admin.negocio?.nombre || "—" }}</td>
+          <td>
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-success': admin.negocio?.activo,
+                'badge-error': !admin.negocio?.activo
+              }"
+            >
+              {{ admin.negocio?.activo ? "Activo" : "Inactivo" }}
+            </span>
+          </td>
+          <td class="flex gap-2">
+            <button
+              class="btn btn-sm btn-info text-white"
+              (click)="editarAdmin(admin.id)"
+            >
+              Editar
+            </button>
+            <button
+              class="btn btn-sm btn-error text-white"
+              (click)="eliminarAdmin(admin)"
+            >
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
