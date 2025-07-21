@@ -10,6 +10,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CuentasService } from '../../services/cuentas.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-cuentas',
@@ -55,7 +56,8 @@ export class CuentasComponent implements OnInit {
     private cuentasService: CuentasService,
     private http: HttpClient,
     private auth: AuthService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private router: Router
   ) {}
 
   @HostListener('document:click', ['$event'])
@@ -289,6 +291,7 @@ export class CuentasComponent implements OnInit {
       costo_total: cuenta.costo_total,
       fecha_compra: cuenta.fecha_compra,
       tiempo_asignado: cuenta.tiempo_asignado,
+      numero_perfiles: cuenta.numero_perfiles,
     };
 
     this.http
@@ -356,5 +359,22 @@ export class CuentasComponent implements OnInit {
           alert(err?.error?.message || 'Error al crear cuenta');
         },
       });
+  }
+
+  verPerfiles(cuentaId: number, event: Event) {
+    const target = event.target as HTMLElement;
+
+    // Si se hizo click en un input, botón o algo editable, no navegar
+    if (
+      ['INPUT', 'BUTTON', 'SELECT', 'TEXTAREA', 'LABEL'].includes(
+        target.tagName
+      ) ||
+      target.closest('button') ||
+      target.closest('input')
+    ) {
+      return;
+    }
+
+    this.router.navigate(['/perfiles', cuentaId]);
   }
 }

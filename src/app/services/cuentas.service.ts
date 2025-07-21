@@ -1,3 +1,4 @@
+//src/app/services/cuentas.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -32,5 +33,11 @@ export class CuentasService {
     const token = this.auth.getToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<Cuenta[]>(this.apiUrl, { headers });
+  }
+
+  getCuenta(id: number): Observable<Cuenta> {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.get<Cuenta>(`${this.apiUrl}/${id}`, { headers });
   }
 }

@@ -52,6 +52,15 @@ export const routes: Routes = [
         (m) => m.CuentasComponent
       ), // 👈 solo estos pueden acceder
   },
+
+  {
+    path: 'perfiles/:cuentaId',
+    canActivate: [adminOempleadoGuard], // 👈 protección añadida
+    loadComponent: () =>
+      import('./pages/perfiles/perfiles.component').then(
+        (m) => m.PerfilesComponent
+      ), // 👈 solo estos pueden acceder
+  },
   // Ruta wildcard opcional para rutas no existentes
   { path: '**', redirectTo: 'login' },
 ];

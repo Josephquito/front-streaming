@@ -167,8 +167,7 @@
   <table class="table w-full">
     <thead>
       <tr class="bg-gray-100 text-left">
-        <th>Servicio</th>
-        <th>Tiempo</th>
+        <th>Queda</th>
         <th>Correo</th>
         <th>Clave</th>
         <th>Usados</th>
@@ -178,16 +177,16 @@
         <th>Tiempo</th>
         <th>Corte</th>
         <th>Acciones</th>
+        <th>Servicio</th>
         <th>#</th>
       </tr>
     </thead>
     <tbody>
       <tr
         *ngFor="let cuenta of cuentasMostradas; let i = index"
-        class="hover:bg-gray-50"
+        class="hover:bg-gray-50 cursor-pointer"
+        (click)="verPerfiles(cuenta.id, $event)"
       >
-        <td>{{ cuenta.plataforma?.nombre || "—" }}</td>
-
         <td>
           <span
             [ngClass]="{
@@ -217,8 +216,21 @@
           <ng-template #claveTexto>{{ cuenta.clave }}</ng-template>
         </td>
 
-        <!-- Usados -->
-        <td>{{ cuenta.perfiles_usados }} de {{ cuenta.numero_perfiles }}</td>
+        <!-- Usados / Total de perfiles -->
+        <td>
+          {{ cuenta.perfiles_usados }} de
+          <ng-container *ngIf="editandoId === cuenta.id; else textoPerfiles">
+            <input
+              type="number"
+              [(ngModel)]="cuenta.numero_perfiles"
+              class="input input-sm w-16 inline-block text-right"
+              (blur)="guardarCambios(cuenta)"
+              (keydown.enter)="guardarCambios(cuenta)"
+              min="1"
+            />
+          </ng-container>
+          <ng-template #textoPerfiles>{{ cuenta.numero_perfiles }}</ng-template>
+        </td>
 
         <!-- Costo editable -->
         <td>
@@ -272,14 +284,14 @@
           <ng-container *ngIf="editandoId === cuenta.id; else botonesNormales">
             <button
               class="btn btn-sm btn-success"
-              (click)="guardarCambios(cuenta)"
+              (click)="guardarCambios(cuenta); $event.stopPropagation()"
               title="Guardar"
             >
               💾
             </button>
             <button
               class="btn btn-sm btn-outline"
-              (click)="cancelarEdicion()"
+              (click)="cancelarEdicion(); $event.stopPropagation()"
               title="Cancelar"
             >
               ❌
@@ -288,14 +300,14 @@
           <ng-template #botonesNormales>
             <button
               class="btn btn-sm btn-outline"
-              (click)="iniciarEdicion(cuenta.id)"
+              (click)="iniciarEdicion(cuenta.id); $event.stopPropagation()"
               title="Editar"
             >
               ✏️
             </button>
             <button
               class="btn btn-sm btn-outline text-red-600"
-              (click)="eliminarCuenta(cuenta.id)"
+              (click)="eliminarCuenta(cuenta.id); $event.stopPropagation()"
               title="Eliminar"
               *ngIf="isAdmin"
             >
@@ -303,7 +315,7 @@
             </button>
           </ng-template>
         </td>
-
+        <td>{{ cuenta.plataforma?.nombre || "—" }}</td>
         <td>{{ i + 1 }}</td>
       </tr>
     </tbody>
