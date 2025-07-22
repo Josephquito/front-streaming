@@ -82,6 +82,11 @@ export class CuentasComponent implements OnInit {
     // Fecha actual para fecha_compra
     const hoy = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
     this.nuevaCuenta.fecha_compra = hoy;
+    window.addEventListener('click', this.cerrarDropdown.bind(this));
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('click', this.cerrarDropdown.bind(this));
   }
 
   cargarPlataformas() {
@@ -325,19 +330,24 @@ export class CuentasComponent implements OnInit {
     tiempo_asignado: '',
     plataformaId: null,
   };
-
   abrirModalCuenta() {
-    this.mostrarModalCuenta = true;
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0'); // Mes con 2 dígitos
+    const dd = String(hoy.getDate()).padStart(2, '0'); // Día con 2 dígitos
+
     this.nuevaCuenta = {
       correo: '',
       clave: '',
-      proveedor: '',
       costo_total: null,
+      proveedor: '',
       numero_perfiles: null,
-      fecha_compra: '',
+      fecha_compra: `${yyyy}-${mm}-${dd}`, // formato compatible con input type="date"
       tiempo_asignado: '',
       plataformaId: null,
     };
+
+    this.mostrarModalCuenta = true;
   }
 
   cerrarModalCuenta() {
@@ -376,5 +386,42 @@ export class CuentasComponent implements OnInit {
     }
 
     this.router.navigate(['/perfiles', cuentaId]);
+  }
+
+  //para el dropdown de opciones menu desplegable
+  dropdownAbierto: number | null = null;
+  dropdownPosX = 0;
+  dropdownPosY = 0;
+  cuentaSeleccionada: any = null;
+
+  toggleDropdown(event: MouseEvent, cuentaId: number) {
+    event.stopPropagation();
+
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    const menuWidth = 180;
+    const viewportWidth = window.innerWidth;
+
+    const abreALaIzquierda = rect.left + menuWidth > viewportWidth;
+    const nuevaPosX = abreALaIzquierda ? rect.right - menuWidth : rect.left;
+    const nuevaPosY = rect.bottom + 8;
+
+    if (this.dropdownAbierto === cuentaId) {
+      this.dropdownAbierto = null;
+    } else {
+      this.dropdownAbierto = cuentaId;
+      this.dropdownPosX = nuevaPosX;
+      this.dropdownPosY = nuevaPosY;
+
+      this.cuentaSeleccionada = this.cuentasMostradas.find(
+        (c) => c.id === cuentaId
+      );
+    }
+  }
+  //para cerrar el dropdown al hacer click fuera
+  @HostListener('document:click')
+  cerrarDropdown() {
+    this.dropdownAbierto = null;
   }
 }

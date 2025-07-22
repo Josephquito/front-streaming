@@ -163,258 +163,217 @@
   <button class="btn btn-neutral" (click)="abrirModalCuenta()">+ Cuenta</button>
 </div>
 
-<div class="p-4 overflow-x-auto">
-  <table class="table w-full">
-    <thead>
-      <tr class="bg-gray-100 text-left">
-        <th>Queda</th>
-        <th>Correo</th>
-        <th>Clave</th>
-        <th>Usados</th>
-        <th>Costo</th>
-        <th>Proveedor</th>
-        <th>Compra</th>
-        <th>Tiempo</th>
-        <th>Corte</th>
-        <th>Acciones</th>
-        <th>Servicio</th>
-        <th>#</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        *ngFor="let cuenta of cuentasMostradas; let i = index"
-        class="hover:bg-gray-50 cursor-pointer"
-        (click)="verPerfiles(cuenta.id, $event)"
-      >
-        <td>
-          <span
-            [ngClass]="{
-              'text-red-600 font-bold': diasRestantes(cuenta.fecha_corte) <= 3,
-              'text-yellow-600':
-                diasRestantes(cuenta.fecha_corte) > 3 &&
-                diasRestantes(cuenta.fecha_corte) <= 7,
-              'text-green-600': diasRestantes(cuenta.fecha_corte) > 7
-            }"
-          >
-            {{ diasRestantes(cuenta.fecha_corte) }} días
-          </span>
-        </td>
-
-        <td>{{ cuenta.correo }}</td>
-
-        <!-- Clave editable -->
-        <td>
-          <ng-container *ngIf="editandoId === cuenta.id; else claveTexto">
-            <input
-              [(ngModel)]="cuenta.clave"
-              class="input input-sm w-full"
-              (blur)="guardarCambios(cuenta)"
-              (keydown.enter)="guardarCambios(cuenta)"
-            />
-          </ng-container>
-          <ng-template #claveTexto>{{ cuenta.clave }}</ng-template>
-        </td>
-
-        <!-- Usados / Total de perfiles -->
-        <td>
-          {{ cuenta.perfiles_usados }} de
-          <ng-container *ngIf="editandoId === cuenta.id; else textoPerfiles">
-            <input
-              type="number"
-              [(ngModel)]="cuenta.numero_perfiles"
-              class="input input-sm w-16 inline-block text-right"
-              (blur)="guardarCambios(cuenta)"
-              (keydown.enter)="guardarCambios(cuenta)"
-              min="1"
-            />
-          </ng-container>
-          <ng-template #textoPerfiles>{{ cuenta.numero_perfiles }}</ng-template>
-        </td>
-
-        <!-- Costo editable -->
-        <td>
-          <ng-container *ngIf="editandoId === cuenta.id; else costoTexto">
-            <input
-              type="number"
-              [(ngModel)]="cuenta.costo_total"
-              class="input input-sm w-full"
-              (blur)="guardarCambios(cuenta)"
-              (keydown.enter)="guardarCambios(cuenta)"
-            />
-          </ng-container>
-          <ng-template #costoTexto>$ {{ cuenta.costo_total }}</ng-template>
-        </td>
-
-        <td>{{ cuenta.proveedor }}</td>
-
-        <!-- Compra editable -->
-        <td>
-          <ng-container *ngIf="editandoId === cuenta.id; else compraTexto">
-            <input
-              type="date"
-              [(ngModel)]="cuenta.fecha_compra"
-              class="input input-sm w-full"
-              (blur)="guardarCambios(cuenta)"
-              (keydown.enter)="guardarCambios(cuenta)"
-            />
-          </ng-container>
-          <ng-template #compraTexto>
-            {{ cuenta.fecha_compra | date : "shortDate" }}
-          </ng-template>
-        </td>
-
-        <!-- Tiempo asignado editable -->
-        <td>
-          <ng-container *ngIf="editandoId === cuenta.id; else tiempoTexto">
-            <input
-              [(ngModel)]="cuenta.tiempo_asignado"
-              class="input input-sm w-full"
-              (blur)="guardarCambios(cuenta)"
-              (keydown.enter)="guardarCambios(cuenta)"
-            />
-          </ng-container>
-          <ng-template #tiempoTexto>{{ cuenta.tiempo_asignado }}</ng-template>
-        </td>
-
-        <td>{{ cuenta.fecha_corte | date : "shortDate" }}</td>
-
-        <!-- Acciones -->
-        <td class="whitespace-nowrap space-x-1">
-          <ng-container *ngIf="editandoId === cuenta.id; else botonesNormales">
-            <button
-              class="btn btn-sm btn-success"
-              (click)="guardarCambios(cuenta); $event.stopPropagation()"
-              title="Guardar"
-            >
-              💾
-            </button>
-            <button
-              class="btn btn-sm btn-outline"
-              (click)="cancelarEdicion(); $event.stopPropagation()"
-              title="Cancelar"
-            >
-              ❌
-            </button>
-          </ng-container>
-          <ng-template #botonesNormales>
-            <button
-              class="btn btn-sm btn-outline"
-              (click)="iniciarEdicion(cuenta.id); $event.stopPropagation()"
-              title="Editar"
-            >
-              ✏️
-            </button>
-            <button
-              class="btn btn-sm btn-outline text-red-600"
-              (click)="eliminarCuenta(cuenta.id); $event.stopPropagation()"
-              title="Eliminar"
-              *ngIf="isAdmin"
-            >
-              🗑️
-            </button>
-          </ng-template>
-        </td>
-        <td>{{ cuenta.plataforma?.nombre || "—" }}</td>
-        <td>{{ i + 1 }}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Modal de cuenta -->
-  <div
-    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-    *ngIf="mostrarModalCuenta"
-  >
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-      <h2 class="text-xl font-semibold mb-4">Agregar cuenta</h2>
-
-      <div class="space-y-3">
-        <!-- Correo -->
-        <input
-          [(ngModel)]="nuevaCuenta.correo"
-          placeholder="Correo"
-          class="input input-bordered w-full"
-        />
-
-        <!-- Clave -->
-        <input
-          [(ngModel)]="nuevaCuenta.clave"
-          placeholder="Clave"
-          class="input input-bordered w-full"
-        />
-
-        <!-- Fila: Costo - Proveedor -->
-        <div class="flex gap-2">
-          <input
-            [(ngModel)]="nuevaCuenta.costo_total"
-            type="number"
-            placeholder="Costo $$"
-            class="input input-bordered w-1/2"
-          />
-          <input
-            [(ngModel)]="nuevaCuenta.proveedor"
-            placeholder="Proveedor"
-            class="input input-bordered w-1/2"
-          />
-        </div>
-
-        <!-- Fila: Número de perfiles - Fecha -->
-        <div class="flex gap-2">
-          <div class="w-1/2">
-            <label class="label">
-              <span class="label-text">N° de perfiles</span>
-            </label>
-            <input
-              [(ngModel)]="nuevaCuenta.numero_perfiles"
-              type="number"
-              placeholder="Ej: 5"
-              class="input input-bordered w-full"
-            />
-          </div>
-
-          <div class="w-1/2">
-            <label class="label">
-              <span class="label-text">Fecha de compra</span>
-            </label>
-            <input
-              [(ngModel)]="nuevaCuenta.fecha_compra"
-              type="date"
-              class="input input-bordered w-full"
-            />
-          </div>
-        </div>
-
-        <!-- Tiempo asignado -->
-        <input
-          [(ngModel)]="nuevaCuenta.tiempo_asignado"
-          placeholder="Ej: 2 meses, 15 días"
-          class="input input-bordered w-full"
-        />
-
-        <!-- Selector de plataforma -->
-        <select
-          [(ngModel)]="nuevaCuenta.plataformaId"
-          class="select select-bordered w-full"
+<div class="p-4 relative z-0">
+  <div class="overflow-x-auto">
+    <table class="table w-full relative z-0">
+      <thead>
+        <tr class="bg-base-200 text-left text-sm">
+          <th>#</th>
+          <th>Servicio</th>
+          <th>Usados</th>
+          <th>Correo</th>
+          <th>Clave</th>
+          <th>Queda</th>
+          <th>Mas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let cuenta of cuentasMostradas; let i = index"
+          class="cursor-pointer transition duration-150 ease-in-out hover:bg-base-200"
+          (click)="verPerfiles(cuenta.id, $event)"
         >
-          <option [ngValue]="null" disabled selected>
-            Selecciona plataforma
-          </option>
-          <option
-            *ngFor="let plataforma of plataformas"
-            [value]="plataforma.id"
-          >
-            {{ plataforma.nombre }}
-          </option>
-        </select>
+          <!-- Número -->
+          <td class="font-medium">{{ i + 1 }}</td>
+
+          <!-- Plataforma -->
+          <td class="uppercase font-semibold">
+            {{ cuenta.plataforma?.nombre || "—" }}
+          </td>
+
+          <!-- Perfiles usados -->
+          <td>
+            <span class="font-semibold text-gray-700">
+              {{ cuenta.perfiles_usados }} /
+              {{ cuenta.numero_perfiles }}
+            </span>
+          </td>
+
+          <!-- Correo -->
+          <td class="text-sm text-gray-600">{{ cuenta.correo }}</td>
+
+          <!-- Clave -->
+          <td class="text-sm text-gray-600">{{ cuenta.clave }}</td>
+
+          <!-- Días restantes -->
+          <td>
+            <span
+              class="font-semibold"
+              [ngClass]="{
+                'text-red-600': diasRestantes(cuenta.fecha_corte) <= 3,
+                'text-yellow-600':
+                  diasRestantes(cuenta.fecha_corte) > 3 &&
+                  diasRestantes(cuenta.fecha_corte) <= 7,
+                'text-green-600': diasRestantes(cuenta.fecha_corte) > 7
+              }"
+            >
+              {{ diasRestantes(cuenta.fecha_corte) }} días
+            </span>
+          </td>
+
+          <td class="text-right relative z-10">
+            <div class="relative inline-block">
+              <button
+                class="btn btn-sm btn-ghost btn-circle"
+                (click)="toggleDropdown($event, cuenta.id)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v.01M12 12v.01M12 18v.01"
+                  />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Menú flotante global -->
+<div
+  *ngIf="dropdownAbierto !== null"
+  class="fixed z-[9999] w-44 bg-white border rounded shadow-lg"
+  [ngStyle]="{ top: dropdownPosY + 'px', left: dropdownPosX + 'px' }"
+  (click)="$event.stopPropagation()"
+>
+  <button
+    class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+    (click)="cerrarDropdown()"
+  >
+    Renovar
+  </button>
+  <button
+    class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+    (click)="cerrarDropdown()"
+  >
+    Reemplazar
+  </button>
+  <button
+    class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+    (click)="cerrarDropdown()"
+  >
+    Inhabilitar
+  </button>
+  <button
+    *ngIf="isAdmin"
+    class="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
+    (click)="cerrarDropdown()"
+  >
+    Eliminar
+  </button>
+</div>
+
+<!-- Modal de cuenta -->
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+  *ngIf="mostrarModalCuenta"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">Agregar cuenta</h2>
+
+    <div class="space-y-3">
+      <!-- Correo -->
+      <input
+        [(ngModel)]="nuevaCuenta.correo"
+        placeholder="Correo"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Clave -->
+      <input
+        [(ngModel)]="nuevaCuenta.clave"
+        placeholder="Clave"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Fila: Costo - Proveedor -->
+      <div class="flex gap-2">
+        <input
+          [(ngModel)]="nuevaCuenta.costo_total"
+          type="number"
+          placeholder="Costo $$"
+          class="input input-bordered w-1/2"
+        />
+        <input
+          [(ngModel)]="nuevaCuenta.proveedor"
+          placeholder="Proveedor"
+          class="input input-bordered w-1/2"
+        />
       </div>
 
-      <div class="flex justify-end mt-4 space-x-2">
-        <button class="btn btn-success" (click)="crearCuenta()">Guardar</button>
-        <button class="btn btn-outline" (click)="cerrarModalCuenta()">
-          Cancelar
-        </button>
+      <!-- Fila: Número de perfiles - Fecha -->
+      <div class="flex gap-2">
+        <div class="w-1/2">
+          <label class="label">
+            <span class="label-text">N° de perfiles</span>
+          </label>
+          <input
+            [(ngModel)]="nuevaCuenta.numero_perfiles"
+            type="number"
+            placeholder="Ej: 5"
+            class="input input-bordered w-full"
+          />
+        </div>
+
+        <div class="w-1/2">
+          <label class="label">
+            <span class="label-text">Fecha de compra</span>
+          </label>
+          <input
+            [(ngModel)]="nuevaCuenta.fecha_compra"
+            type="date"
+            class="input input-bordered w-full"
+          />
+        </div>
       </div>
+
+      <!-- Tiempo asignado -->
+      <input
+        [(ngModel)]="nuevaCuenta.tiempo_asignado"
+        placeholder="Tiempo Ej: 1 mes"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Selector de plataforma -->
+      <select
+        [(ngModel)]="nuevaCuenta.plataformaId"
+        class="select select-bordered w-full"
+      >
+        <option [ngValue]="null" disabled selected>
+          Selecciona plataforma
+        </option>
+        <option *ngFor="let plataforma of plataformas" [value]="plataforma.id">
+          {{ plataforma.nombre }}
+        </option>
+      </select>
+    </div>
+
+    <div class="flex justify-end mt-4 space-x-2">
+      <button class="btn btn-success" (click)="crearCuenta()">Guardar</button>
+      <button class="btn btn-outline" (click)="cerrarModalCuenta()">
+        Cancelar
+      </button>
     </div>
   </div>
 </div>
