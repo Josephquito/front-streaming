@@ -1,0 +1,71 @@
+<div class="p-4 space-y-4">
+  <!-- Contenedor responsivo -->
+  <div class="flex flex-wrap gap-4 items-center">
+    <!-- Buscador ocupa toda la línea si es necesario -->
+    <input
+      type="text"
+      [(ngModel)]="busqueda"
+      (input)="filtrarClientes()"
+      class="input input-bordered flex-grow min-w-[250px]"
+      placeholder="Buscar por nombre o contacto"
+    />
+
+    <!-- Botón importar CSV -->
+    <label
+      class="btn h-12 text-sm font-semibold border border-black text-black bg-white hover:bg-gray-100 rounded-xl shadow whitespace-nowrap"
+    >
+      Importar desde CSV
+      <input
+        type="file"
+        accept=".csv"
+        hidden
+        (change)="importarDesdeCsv($event)"
+      />
+    </label>
+
+    <!-- Botón crear contacto -->
+    <button
+      class="btn btn-primary h-12 text-sm whitespace-nowrap"
+      (click)="abrirModalNuevoCliente()"
+    >
+      Crear contacto
+    </button>
+
+    <!-- Botón exportar CSV -->
+    <button
+      class="btn h-12 text-sm font-semibold border border-black text-black bg-white hover:bg-gray-100 rounded-xl shadow whitespace-nowrap"
+      (click)="exportarParaGoogleContactos()"
+    >
+      Exportar CSV Google
+    </button>
+  </div>
+
+  <!-- Tabla de clientes -->
+  <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Numero Tlf</th>
+          <th>Clave</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cliente of clientesFiltrados; let i = index">
+          <td>{{ i + 1 }}</td>
+          <td>{{ cliente.nombre }}</td>
+          <td>{{ cliente.contacto }}</td>
+          <td>{{ cliente.clave }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<app-modal-nuevo-cliente
+  *ngIf="mostrarModal"
+  [clientes]="clientes"
+  (cerrar)="mostrarModal = false"
+  (guardado)="cargarClientes()"
+></app-modal-nuevo-cliente>

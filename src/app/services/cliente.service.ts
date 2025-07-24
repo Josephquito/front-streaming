@@ -20,4 +20,16 @@ export class ClienteService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<Cliente[]>(`${this.apiUrl}/mis-clientes`, { headers });
   }
+
+  crearCliente(cliente: any): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post(`${this.apiUrl}`, cliente, { headers });
+  }
+
+  editarCliente(id: number, cambios: Partial<any>): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.patch(`${this.apiUrl}/${id}`, cambios, { headers });
+  }
 }

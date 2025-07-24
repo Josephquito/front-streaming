@@ -22,9 +22,10 @@ export class CuentasComponent implements OnInit {
   @ViewChild('menuOpciones') menuOpcionesRef!: ElementRef;
   mostrarOpciones = false;
   plataformas: Plataforma[] = [];
-  seleccionada: string = 'todas';
+
   mostrarModal = false;
   editandoId: number | null = null;
+  seleccionada: string = 'todas';
   busquedaGlobal: string = '';
   cuentasMostradas: any[] = [];
 
