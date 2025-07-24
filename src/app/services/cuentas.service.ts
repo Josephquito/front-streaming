@@ -40,4 +40,11 @@ export class CuentasService {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.get<Cuenta>(`${this.apiUrl}/${id}`, { headers });
   }
+
+  // 🛠️ PATCH para reemplazar/actualizar una cuenta
+  actualizarCuenta(id: number, datos: any): Observable<any> {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.patch(`${this.apiUrl}/${id}`, datos, { headers });
+  }
 }

@@ -185,21 +185,29 @@ export class CuentasComponent implements OnInit {
     } else {
       if (this.seleccionada === 'todas') {
         this.cuentasMostradas = this.cuentas;
+      } else if (this.seleccionada === 'inhabilitadas') {
+        this.cuentasMostradas = this.cuentas.filter((c) => c.inhabilitada);
       } else {
         this.cuentasMostradas = this.cuentas.filter(
           (c) => c.plataforma?.nombre === this.seleccionada
         );
       }
     }
+
     // ✅ Aplicar el orden personalizado
     this.cuentasMostradas = this.cuentasMostradas.sort((a, b) => {
+      // Si una está inhabilitada y la otra no, la inhabilitada va al final
+      if (a.inhabilitada && !b.inhabilitada) return 1;
+      if (!a.inhabilitada && b.inhabilitada) return -1;
+
+      // Ambos inhabilitados o ambos activos, ordenar por llenos
       const aLleno = a.perfiles_usados >= a.numero_perfiles;
       const bLleno = b.perfiles_usados >= b.numero_perfiles;
 
-      if (aLleno && bLleno) return 0;
-      if (aLleno) return 1;
-      if (bLleno) return -1;
+      if (aLleno && !bLleno) return 1;
+      if (!aLleno && bLleno) return -1;
 
+      // Ambos llenos o ambos no llenos, ordenar por más usados primero
       return b.perfiles_usados - a.perfiles_usados;
     });
   }
@@ -419,9 +427,142 @@ export class CuentasComponent implements OnInit {
       );
     }
   }
+
   //para cerrar el dropdown al hacer click fuera
   @HostListener('document:click')
   cerrarDropdown() {
     this.dropdownAbierto = null;
+  }
+
+  inhabilitarCuenta(id: number) {
+    const confirmar = confirm('¿Deseas marcar esta cuenta como inhabilitada?');
+    if (!confirmar) return;
+
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .patch(
+        `${environment.apiUrl}/cuentas/${id}`,
+        { inhabilitada: true },
+        { headers }
+      )
+      .subscribe({
+        next: () => {
+          this.cargarCuentas(); // refrescar la tabla
+          this.cerrarDropdown(); // cerrar menú
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al inhabilitar la cuenta');
+        },
+      });
+  }
+
+  habilitarCuenta(id: number) {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .patch(
+        `${environment.apiUrl}/cuentas/${id}`,
+        { inhabilitada: false },
+        { headers }
+      )
+      .subscribe({
+        next: () => this.cargarCuentas(),
+        error: (err) => {
+          alert(err?.error?.message || 'Error al habilitar la cuenta');
+        },
+      });
+  }
+
+  mostrarModalReemplazo = false;
+  cuentaReemplazo: any = {};
+
+  abrirModalReemplazo(cuenta: any) {
+    console.log('🔁 Abrir modal para cuenta:', cuenta);
+    this.cuentaReemplazo = {
+      id: cuenta.id,
+      correo: cuenta.correo,
+      clave: cuenta.clave,
+      costo_total: cuenta.costo_total,
+      proveedor: cuenta.proveedor, // precargado
+      fecha_compra: cuenta.fecha_compra?.split('T')[0] || this.hoyISO(),
+      tiempo_asignado: cuenta.tiempo_asignado,
+    };
+    this.mostrarModalReemplazo = true;
+    this.cerrarDropdown(); // opcional si quieres cerrar el menú flotante
+  }
+
+  cerrarModalReemplazo() {
+    this.mostrarModalReemplazo = false;
+  }
+
+  guardarReemplazo() {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .patch(
+        `${environment.apiUrl}/cuentas/${this.cuentaReemplazo.id}`,
+        this.cuentaReemplazo,
+        { headers }
+      )
+      .subscribe({
+        next: () => {
+          this.cargarCuentas(); // 🔄 Recarga las cuentas
+          this.cerrarModalReemplazo(); // ✅ Cierra la modal
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al guardar cambios');
+        },
+      });
+  }
+
+  hoyISO(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  mostrarModalRenovar = false;
+  cuentaRenovar: any = {};
+
+  abrirModalRenovar(cuenta: any) {
+    this.cuentaRenovar = {
+      id: cuenta.id,
+      fecha_compra: cuenta.fecha_compra?.split('T')[0] || this.hoyISO(),
+      costo_total: cuenta.costo_total,
+      tiempo_asignado: cuenta.tiempo_asignado,
+    };
+    this.mostrarModalRenovar = true;
+    this.cerrarDropdown(); // opcional
+  }
+
+  cerrarModalRenovar() {
+    this.mostrarModalRenovar = false;
+  }
+
+  guardarRenovacion() {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .patch(
+        `${environment.apiUrl}/cuentas/${this.cuentaRenovar.id}`,
+        {
+          fecha_compra: this.cuentaRenovar.fecha_compra,
+          costo_total: this.cuentaRenovar.costo_total,
+          tiempo_asignado: this.cuentaRenovar.tiempo_asignado,
+        },
+        { headers }
+      )
+      .subscribe({
+        next: () => {
+          this.cargarCuentas();
+          this.cerrarModalRenovar();
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al renovar la cuenta');
+        },
+      });
   }
 }

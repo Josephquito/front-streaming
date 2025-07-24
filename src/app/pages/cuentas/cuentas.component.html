@@ -37,6 +37,13 @@
       >
         {{ plataforma.nombre }}
       </button>
+      <button
+        class="btn shrink-0"
+        (click)="seleccionar('inhabilitadas', inhaBtn)"
+        #inhaBtn
+      >
+        Caidas
+      </button>
     </div>
   </div>
 
@@ -181,14 +188,19 @@
         <tr
           *ngFor="let cuenta of cuentasMostradas; let i = index"
           class="cursor-pointer transition duration-150 ease-in-out hover:bg-base-200"
+          [ngClass]="{ 'text-red-600': cuenta.inhabilitada }"
           (click)="verPerfiles(cuenta.id, $event)"
         >
           <!-- Número -->
           <td class="font-medium">{{ i + 1 }}</td>
 
           <!-- Plataforma -->
-          <td class="uppercase font-semibold">
-            {{ cuenta.plataforma?.nombre || "—" }}
+          <td
+            class="uppercase font-semibold"
+            [ngClass]="{ 'text-red-600': cuenta.inhabilitada }"
+          >
+            {{ cuenta.plataforma?.nombre
+            }}<span *ngIf="cuenta.inhabilitada"> caída</span>
           </td>
 
           <!-- Perfiles usados -->
@@ -200,10 +212,10 @@
           </td>
 
           <!-- Correo -->
-          <td class="text-sm text-gray-600">{{ cuenta.correo }}</td>
+          <td class="text-sm">{{ cuenta.correo }}</td>
 
           <!-- Clave -->
-          <td class="text-sm text-gray-600">{{ cuenta.clave }}</td>
+          <td class="text-sm">{{ cuenta.clave }}</td>
 
           <!-- Días restantes -->
           <td>
@@ -259,26 +271,36 @@
 >
   <button
     class="block w-full text-left px-4 py-2 hover:bg-gray-100"
-    (click)="cerrarDropdown()"
+    (click)="abrirModalRenovar(cuentaSeleccionada); cerrarDropdown()"
   >
     Renovar
   </button>
   <button
     class="block w-full text-left px-4 py-2 hover:bg-gray-100"
-    (click)="cerrarDropdown()"
+    (click)="abrirModalReemplazo(cuentaSeleccionada); cerrarDropdown()"
   >
     Reemplazar
   </button>
   <button
+    *ngIf="!cuentaSeleccionada?.inhabilitada"
     class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
-    (click)="cerrarDropdown()"
+    (click)="inhabilitarCuenta(cuentaSeleccionada.id); cerrarDropdown()"
   >
     Inhabilitar
   </button>
+
+  <button
+    *ngIf="cuentaSeleccionada?.inhabilitada"
+    class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-green-600"
+    (click)="habilitarCuenta(cuentaSeleccionada.id); cerrarDropdown()"
+  >
+    Habilitar
+  </button>
+
   <button
     *ngIf="isAdmin"
     class="block w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
-    (click)="cerrarDropdown()"
+    (click)="eliminarCuenta(cuentaSeleccionada?.id); cerrarDropdown()"
   >
     Eliminar
   </button>
@@ -373,6 +395,110 @@
       <button class="btn btn-success" (click)="crearCuenta()">Guardar</button>
       <button class="btn btn-outline" (click)="cerrarModalCuenta()">
         Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Reemplazo -->
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+  *ngIf="mostrarModalReemplazo"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">Reemplazar cuenta</h2>
+
+    <div class="space-y-3">
+      <!-- Correo -->
+      <input
+        [(ngModel)]="cuentaReemplazo.correo"
+        placeholder="Correo"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Clave -->
+      <input
+        [(ngModel)]="cuentaReemplazo.clave"
+        placeholder="Clave"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Costo - Proveedor -->
+      <div class="flex gap-2">
+        <input
+          [(ngModel)]="cuentaReemplazo.costo_total"
+          type="number"
+          placeholder="Costo $$"
+          class="input input-bordered w-1/2"
+        />
+        <input
+          [(ngModel)]="cuentaReemplazo.proveedor"
+          placeholder="Proveedor"
+          class="input input-bordered w-1/2"
+          disabled
+        />
+      </div>
+
+      <!-- Fecha compra -->
+      <input
+        [(ngModel)]="cuentaReemplazo.fecha_compra"
+        type="date"
+        class="input input-bordered w-full"
+      />
+
+      <!-- Tiempo asignado -->
+      <input
+        [(ngModel)]="cuentaReemplazo.tiempo_asignado"
+        placeholder="Tiempo asignado (ej: 1 mes)"
+        class="input input-bordered w-full"
+      />
+    </div>
+
+    <div class="flex justify-end mt-4 gap-2">
+      <button class="btn btn-ghost" (click)="cerrarModalReemplazo()">
+        Cancelar
+      </button>
+      <button class="btn btn-primary" (click)="guardarReemplazo()">
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Renovación -->
+<div
+  class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+  *ngIf="mostrarModalRenovar"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">Renovar cuenta</h2>
+
+    <div class="space-y-3">
+      <input
+        [(ngModel)]="cuentaRenovar.fecha_compra"
+        type="date"
+        class="input input-bordered w-full"
+        placeholder="Fecha de compra"
+      />
+      <input
+        [(ngModel)]="cuentaRenovar.costo_total"
+        type="number"
+        placeholder="Costo total"
+        class="input input-bordered w-full"
+      />
+      <input
+        [(ngModel)]="cuentaRenovar.tiempo_asignado"
+        placeholder="Tiempo asignado (ej: 1 mes)"
+        class="input input-bordered w-full"
+      />
+    </div>
+
+    <div class="flex justify-end mt-4 gap-2">
+      <button class="btn btn-ghost" (click)="cerrarModalRenovar()">
+        Cancelar
+      </button>
+      <button class="btn btn-primary" (click)="guardarRenovacion()">
+        Guardar
       </button>
     </div>
   </div>

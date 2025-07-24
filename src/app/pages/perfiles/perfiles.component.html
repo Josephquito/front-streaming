@@ -5,25 +5,39 @@
     </button>
   </div>
 
-  <h2 class="text-xl font-bold mb-4">
-    {{ cuentaSeleccionada.correo }}
-  </h2>
-
-  <!-- Información general de la cuenta -->
-  <div class="grid grid-cols-2 gap-4 mb-6">
-    <div>
-      <strong>Plataforma:</strong> {{ cuentaSeleccionada.plataforma?.nombre }}
-    </div>
-    <div><strong>Corte:</strong> {{ cuentaSeleccionada.fecha_corte }}</div>
-    <div *ngIf="isAdmin">
-      <strong>Costo total:</strong> ${{ cuentaSeleccionada.costo_total }}
-    </div>
-    <div *ngIf="isAdmin">
-      <strong>Ganancia total:</strong> ${{ calcularGananciaTotal() }}
+  <!-- 🔒 Detalles completos de la cuenta solo para admins -->
+  <div *ngIf="isAdmin" class="border rounded-lg p-4 mb-6 bg-base-100 shadow">
+    <h3 class="text-lg font-semibold mb-2">Detalles completos de la cuenta</h3>
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>Correo:</strong> {{ cuentaSeleccionada.correo }}</div>
+      <div><strong>Clave:</strong> {{ cuentaSeleccionada.clave }}</div>
+      <div>
+        <strong>Fecha de compra:</strong> {{ cuentaSeleccionada.fecha_compra }}
+      </div>
+      <div>
+        <strong>Tiempo asignado:</strong>
+        {{ cuentaSeleccionada.tiempo_asignado }}
+      </div>
+      <div>
+        <strong>Fecha de corte:</strong> {{ cuentaSeleccionada.fecha_corte }}
+      </div>
+      <div><strong>Proveedor:</strong> {{ cuentaSeleccionada.proveedor }}</div>
+      <div>
+        <strong>Número de perfiles:</strong>
+        {{ cuentaSeleccionada.numero_perfiles }}
+      </div>
+      <div>
+        <strong>Plataforma:</strong> {{ cuentaSeleccionada.plataforma?.nombre }}
+      </div>
+      <div>
+        <strong>Costo total:</strong> ${{ cuentaSeleccionada.costo_total }}
+      </div>
+      <div><strong>Ganancia total:</strong> ${{ calcularGananciaTotal() }}</div>
     </div>
   </div>
+
   <!-- Tabla de perfiles -->
-  <div class="overflow-x-auto">
+  <div class="overflow-x-auto border rounded-lg p-4 mb-6 bg-base-100 shadow">
     <table class="table table-zebra w-full">
       <thead>
         <tr>
