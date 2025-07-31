@@ -41,11 +41,29 @@
         </ng-container>
 
         <ng-container *ngIf="isLoggedIn">
+          <li *ngIf="isLoggedIn">
+            <a routerLink="/inicio">Inicio</a>
+          </li>
+          <li *ngIf="isAdmin || isEmpleado">
+            <a routerLink="/cuentas">Cuentas</a>
+          </li>
+          <li *ngIf="isAdmin || isEmpleado">
+            <a routerLink="/clientes">Clientes</a>
+          </li>
+          <li *ngIf="isAdmin">
+            <a routerLink="/finanzas">Finanzas</a>
+          </li>
+          <li *ngIf="isAdmin">
+            <a routerLink="/">Empleados</a>
+          </li>
           <li *ngIf="isSuperAdmin">
             <a routerLink="/registrar-admin">Registrar Admin</a>
           </li>
+          <li *ngIf="isSuperAdmin">
+            <a routerLink="/admins">Ver Admins</a>
+          </li>
           <li>
-            <button (click)="logout()" class="text-red-500">
+            <button (click)="logout()" class="text-red-500 font-semibold">
               Cerrar sesión
             </button>
           </li>
@@ -79,7 +97,7 @@
           <a routerLink="/clientes">Clientes</a>
         </li>
         <li *ngIf="isAdmin">
-          <a routerLink="/">Finanzas</a>
+          <a routerLink="/finanzas">Finanzas</a>
         </li>
         <li *ngIf="isAdmin">
           <a routerLink="/">Empleados</a>

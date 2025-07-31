@@ -49,6 +49,7 @@
           <th>Nombre</th>
           <th>Numero Tlf</th>
           <th>Clave</th>
+          <th>Fecha de registro</th>
         </tr>
       </thead>
       <tbody>
@@ -57,6 +58,7 @@
           <td>{{ cliente.nombre }}</td>
           <td>{{ cliente.contacto }}</td>
           <td>{{ cliente.clave }}</td>
+          <td>{{ cliente.fecha_creacion | date : "short" }}</td>
         </tr>
       </tbody>
     </table>

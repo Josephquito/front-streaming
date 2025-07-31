@@ -71,6 +71,15 @@ export const routes: Routes = [
       ), // 👈 solo estos pueden acceder
   },
 
+  {
+    path: 'finanzas',
+    canActivate: [adminOempleadoGuard], // 👈 protección añadida
+    loadComponent: () =>
+      import('./pages/finanzas/finanzas.component').then(
+        (m) => m.FinanzasComponent
+      ), // 👈 solo estos pueden acceder
+  },
+
   // Ruta wildcard opcional para rutas no existentes
   { path: '**', redirectTo: 'login' },
 ];
