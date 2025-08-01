@@ -407,26 +407,49 @@
 >
   <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
     <h2 class="text-xl font-semibold mb-4">Reemplazar cuenta</h2>
+    <!-- Selector de tipo -->
+    <label class="label mt-2">Tipo de reemplazo</label>
+    <select
+      class="select select-bordered w-full mb-4"
+      [(ngModel)]="tipoReemplazo"
+      (change)="onTipoReemplazoChange()"
+    >
+      <option value="" disabled selected>-- Selecciona una opción --</option>
+      <option value="PROVEEDOR">POR PROVEEDOR</option>
+      <option value="COMPRA_NUEVA">COMPRE UNA NUEVA</option>
+      <option value="COMPRA_EXISTENTE">POR UNA EXISTENTE</option>
+    </select>
 
-    <div class="space-y-3">
-      <!-- Correo -->
+    <!-- 🔁 PROVEEDOR -->
+    <ng-container *ngIf="tipoReemplazo === 'PROVEEDOR'">
       <input
-        [(ngModel)]="cuentaReemplazo.correo"
-        placeholder="Correo"
-        class="input input-bordered w-full"
+        [(ngModel)]="cuentaReemplazo.nuevoCorreo"
+        placeholder="Nuevo correo"
+        class="input input-bordered w-full mb-4"
+      />
+      <input
+        [(ngModel)]="cuentaReemplazo.nuevaClave"
+        placeholder="Nueva clave"
+        class="input input-bordered w-full mb-4"
+      />
+    </ng-container>
+
+    <!-- 🛒 COMPRA NUEVA -->
+    <ng-container *ngIf="tipoReemplazo === 'COMPRA_NUEVA'">
+      <input
+        [(ngModel)]="cuentaReemplazo.nuevoCorreo"
+        placeholder="Correo nuevo"
+        class="input input-bordered w-full mb-4"
+      />
+      <input
+        [(ngModel)]="cuentaReemplazo.nuevaClave"
+        placeholder="Clave nueva"
+        class="input input-bordered w-full mb-4"
       />
 
-      <!-- Clave -->
-      <input
-        [(ngModel)]="cuentaReemplazo.clave"
-        placeholder="Clave"
-        class="input input-bordered w-full"
-      />
-
-      <!-- Costo - Proveedor -->
-      <div class="flex gap-2">
+      <div class="flex gap-2 mb-4">
         <input
-          [(ngModel)]="cuentaReemplazo.costo_total"
+          [(ngModel)]="cuentaReemplazo.costo"
           type="number"
           placeholder="Costo $$"
           class="input input-bordered w-1/2"
@@ -435,30 +458,47 @@
           [(ngModel)]="cuentaReemplazo.proveedor"
           placeholder="Proveedor"
           class="input input-bordered w-1/2"
-          disabled
         />
       </div>
 
-      <!-- Fecha compra -->
       <input
         [(ngModel)]="cuentaReemplazo.fecha_compra"
         type="date"
-        class="input input-bordered w-full"
+        class="input input-bordered w-full mb-4"
       />
-
-      <!-- Tiempo asignado -->
       <input
-        [(ngModel)]="cuentaReemplazo.tiempo_asignado"
+        [(ngModel)]="cuentaReemplazo.tiempo_establecido"
         placeholder="Tiempo asignado (ej: 1 mes)"
-        class="input input-bordered w-full"
+        class="input input-bordered w-full mb-4"
       />
-    </div>
+    </ng-container>
+
+    <!-- 📦 COMPRA EXISTENTE -->
+    <ng-container *ngIf="tipoReemplazo === 'COMPRA_EXISTENTE'">
+      <label class="block text-sm font-medium mb-1 mt-1">
+        Selecciona una cuenta disponible
+      </label>
+      <select
+        [(ngModel)]="cuentaReemplazo.cuentaExistenteId"
+        class="select select-bordered w-full mb-4"
+      >
+        <option value="" disabled selected>Selecciona una cuenta</option>
+        <option *ngFor="let cuenta of cuentasDisponibles" [value]="cuenta.id">
+          {{ cuenta.correo }} -
+          {{ calcularDiasRestantes(cuenta.fecha_corte) }} días restantes
+        </option>
+      </select>
+    </ng-container>
 
     <div class="flex justify-end mt-4 gap-2">
       <button class="btn btn-ghost" (click)="cerrarModalReemplazo()">
         Cancelar
       </button>
-      <button class="btn btn-primary" (click)="guardarReemplazo()">
+      <button
+        class="btn btn-primary"
+        (click)="guardarReemplazo()"
+        [disabled]="!tipoReemplazo"
+      >
         Guardar
       </button>
     </div>

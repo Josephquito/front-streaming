@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { HostListener, ElementRef, ViewChild } from '@angular/core';
 import { CuentasService } from '../../services/cuentas.service';
 import { Router } from '@angular/router';
+import dayjs from 'dayjs';
 
 @Component({
   selector: 'app-cuentas',
@@ -478,35 +479,106 @@ export class CuentasComponent implements OnInit {
   }
 
   mostrarModalReemplazo = false;
+  tipoReemplazo: 'PROVEEDOR' | 'COMPRA_NUEVA' | 'COMPRA_EXISTENTE' | '' = '';
   cuentaReemplazo: any = {};
+  cuentasDisponibles: any[] = [];
+  cuentaOriginalSeleccionada: any = null;
 
+  obtenerCuentasDisponibles(plataformaId: number) {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http
+      .get<any[]>(
+        `${environment.apiUrl}/cuentas/disponibles/reemplazo/${plataformaId}`,
+        { headers }
+      )
+      .subscribe({
+        next: (data) => {
+          // 🔥 Filtrar para NO incluir la cuenta que se está reemplazando
+          this.cuentasDisponibles = data.filter(
+            (cuenta) => cuenta.id !== this.cuentaOriginalSeleccionada?.id
+          );
+        },
+        error: (err) => {
+          alert(err?.error?.message || 'Error al cargar cuentas disponibles');
+        },
+      });
+  }
+
+  calcularDiasRestantes(fechaCorte: string): number {
+    const hoy = dayjs();
+    const corte = dayjs(fechaCorte);
+    return corte.diff(hoy, 'day');
+  }
+
+  onTipoReemplazoChange() {
+    // COMPRA_EXISTENTE: obtener cuentas disponibles por plataforma
+    if (this.tipoReemplazo === 'COMPRA_EXISTENTE') {
+      const plataformaId = this.cuentaOriginalSeleccionada?.plataformaId;
+      if (plataformaId) {
+        this.obtenerCuentasDisponibles(plataformaId);
+      }
+    }
+
+    // COMPRA_NUEVA: precargar fecha actual
+    if (this.tipoReemplazo === 'COMPRA_NUEVA') {
+      const hoy = new Date().toISOString().split('T')[0];
+      this.cuentaReemplazo.fecha_compra = hoy;
+    }
+  }
   abrirModalReemplazo(cuenta: any) {
-    console.log('🔁 Abrir modal para cuenta:', cuenta);
+    this.mostrarModalReemplazo = true;
+    this.tipoReemplazo = '';
+    this.cuentaOriginalSeleccionada = cuenta;
     this.cuentaReemplazo = {
       id: cuenta.id,
-      correo: cuenta.correo,
-      clave: cuenta.clave,
-      costo_total: cuenta.costo_total,
-      proveedor: cuenta.proveedor, // precargado
-      fecha_compra: cuenta.fecha_compra?.split('T')[0] || this.hoyISO(),
-      tiempo_asignado: cuenta.tiempo_asignado,
     };
-    this.mostrarModalReemplazo = true;
-    this.cerrarDropdown(); // opcional si quieres cerrar el menú flotante
+    this.cuentasDisponibles = [];
+    this.cerrarDropdown();
   }
 
   cerrarModalReemplazo() {
     this.mostrarModalReemplazo = false;
+    this.tipoReemplazo = '';
+    this.cuentaOriginalSeleccionada = null;
+    this.cuentaReemplazo = {};
   }
 
   guardarReemplazo() {
     const token = this.auth.getToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
+    // Construir el payload en función del tipo de reemplazo
+    const payload: any = {
+      tipo: this.tipoReemplazo,
+    };
+
+    // Tipo: PROVEEDOR
+    if (this.tipoReemplazo === 'PROVEEDOR') {
+      payload.nuevoCorreo = this.cuentaReemplazo.nuevoCorreo;
+      payload.nuevaClave = this.cuentaReemplazo.nuevaClave;
+    }
+
+    // Tipo: COMPRA_NUEVA
+    if (this.tipoReemplazo === 'COMPRA_NUEVA') {
+      payload.nuevoCorreo = this.cuentaReemplazo.nuevoCorreo;
+      payload.nuevaClave = this.cuentaReemplazo.nuevaClave;
+      payload.proveedor = this.cuentaReemplazo.proveedor;
+      payload.fecha_compra = this.cuentaReemplazo.fecha_compra;
+      payload.tiempo_establecido = this.cuentaReemplazo.tiempo_establecido;
+      payload.costo = this.cuentaReemplazo.costo;
+    }
+
+    // Tipo: COMPRA_EXISTENTE
+    if (this.tipoReemplazo === 'COMPRA_EXISTENTE') {
+      payload.cuentaExistenteId = this.cuentaReemplazo.cuentaExistenteId;
+    }
+
     this.http
       .patch(
-        `${environment.apiUrl}/cuentas/${this.cuentaReemplazo.id}`,
-        this.cuentaReemplazo,
+        `${environment.apiUrl}/cuentas/reemplazar/${this.cuentaReemplazo.id}`,
+        payload,
         { headers }
       )
       .subscribe({
