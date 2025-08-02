@@ -24,7 +24,7 @@ export class PerfilesComponent implements OnInit {
     clienteId: 0,
     fecha_venta: '',
     tiempo_asignado: '',
-    precio: 0,
+    precio: undefined,
   };
 
   constructor(
@@ -82,33 +82,86 @@ export class PerfilesComponent implements OnInit {
     });
   }
 
+  get espaciosLibres(): number[] {
+    const total = this.cuentaSeleccionada?.numero_perfiles || 0;
+    const usados = this.perfiles?.length || 0;
+    const libres = Math.max(total - usados, 0);
+    return Array.from({ length: libres });
+  }
+
+  normalizarTexto(texto: string): string {
+    return texto.replace(/\D/g, ''); // Elimina todo lo que no sea dígito
+  }
+
+  clientesFiltrados: any[] = [];
+  busquedaCliente: string = '';
+  mostrarListaClientes = false;
+
+  filtrarClientes() {
+    const texto = this.normalizarTexto(this.busquedaCliente.toLowerCase());
+
+    this.clientesFiltrados = this.clientes.filter((c) => {
+      const nombre = c.nombre.toLowerCase();
+      const contacto = this.normalizarTexto(c.contacto);
+
+      return (
+        nombre.includes(this.busquedaCliente.toLowerCase()) ||
+        contacto.includes(texto)
+      );
+    });
+  }
+
+  seleccionarCliente(cliente: any) {
+    this.nuevoPerfil.clienteId = cliente.id;
+    this.busquedaCliente = `${cliente.nombre} (${cliente.contacto})`;
+    this.mostrarListaClientes = false;
+  }
+
   volverAtras() {
     this.router.navigate(['/cuentas']);
   }
 
   registrarPerfil() {
-    const datos = {
-      cuentaId: this.cuentaId,
+    const datos: any = {
       ...this.nuevoPerfil,
+      cuentaId: this.cuentaSeleccionada.id,
     };
+
+    // Si precio está vacío o inválido, no lo envíes
+    if (
+      datos.precio === undefined ||
+      datos.precio === null ||
+      datos.precio === ''
+    ) {
+      delete datos.precio;
+    } else {
+      datos.precio = Number(datos.precio); // Asegura que sea número
+    }
 
     this.perfilService.crearPerfil(datos).subscribe({
       next: () => {
-        this.mostrarFormulario = false;
-        this.nuevoPerfil = {
-          clienteId: 0,
-          fecha_venta: '',
-          tiempo_asignado: '',
-          precio: 0,
-        };
         this.cargarPerfiles();
         this.cargarCuenta(); // 🔄 Actualiza también los datos de la cuenta
+
+        this.cerrarModal(); // ❌ Cierra la modal correctamente
+
+        // Reinicia nuevoPerfil con valores por defecto
+        this.nuevoPerfil = {
+          clienteId: 0,
+          fecha_venta: new Date().toISOString().split('T')[0],
+          tiempo_asignado: '',
+          precio: undefined,
+        };
+
+        this.busquedaCliente = '';
+        this.clientesFiltrados = [];
       },
       error: (err) => {
         console.error('Error al registrar perfil', err);
       },
     });
   }
+
   eliminarPerfil(perfilId: number) {
     if (confirm('¿Estás seguro de eliminar este perfil?')) {
       this.perfilService.eliminarPerfil(perfilId).subscribe({
@@ -155,17 +208,6 @@ export class PerfilesComponent implements OnInit {
 
   filaSeleccionada: number | null = null;
 
-  venderEnPosicion(pos: number) {
-    this.filaSeleccionada = pos;
-    this.mostrarFormulario = true;
-    this.nuevoPerfil = {
-      clienteId: 0,
-      fecha_venta: '',
-      tiempo_asignado: '',
-      precio: 0,
-    };
-  }
-
   calcularGananciaTotal(): string {
     const total = this.perfiles.reduce((sum, perfil) => {
       return sum + (parseFloat(perfil.ganancia) || 0);
@@ -206,5 +248,29 @@ export class PerfilesComponent implements OnInit {
   formatearFecha(fecha: string): string {
     const [a, m, d] = fecha.split('-');
     return `${parseInt(d)}/${parseInt(m)}/${a.slice(2)}`;
+  }
+
+  mostrarModalVender = false;
+
+  abrirModal() {
+    this.mostrarModalVender = true;
+    this.nuevoPerfil = {
+      clienteId: 0,
+      fecha_venta: new Date().toISOString().split('T')[0],
+      tiempo_asignado: '',
+      precio: undefined,
+    };
+  }
+
+  cerrarModal() {
+    this.mostrarModalVender = false;
+    this.busquedaCliente = '';
+    this.clientesFiltrados = [];
+    this.nuevoPerfil = {
+      clienteId: 0,
+      fecha_venta: new Date().toISOString().split('T')[0],
+      tiempo_asignado: '',
+      precio: undefined,
+    };
   }
 }

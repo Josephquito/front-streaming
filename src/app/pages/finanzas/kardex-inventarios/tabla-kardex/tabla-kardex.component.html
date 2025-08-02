@@ -1,0 +1,63 @@
+<div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-lg sm:text-xl font-bold text-base-content">
+      Kardex de movimientos
+    </h2>
+  </div>
+
+  <table class="table table w-full text-sm">
+    <thead>
+      <tr class="bg-neutral text-white text-xs text-center">
+        <th rowspan="2">FECHA</th>
+        <th rowspan="2">DESCRIPCIÓN</th>
+        <th colspan="3">ENTRADAS</th>
+        <th colspan="3">SALIDAS</th>
+        <th colspan="3">SALDOS</th>
+      </tr>
+      <tr class="bg-neutral text-white text-xs text-center">
+        <th>CANT</th>
+        <th>PU</th>
+        <th>PT</th>
+        <th>CANT</th>
+        <th>PU</th>
+        <th>PT</th>
+        <th>CANT</th>
+        <th>PU</th>
+        <th>PT</th>
+      </tr>
+    </thead>
+    <tbody class="text-center">
+      <tr *ngFor="let m of movimientos">
+        <td>{{ m.fecha | date : "shortDate" }}</td>
+        <td>{{ m.descripcion }}</td>
+
+        <!-- Entradas -->
+        <td>{{ m.entrada_cant ?? "" }}</td>
+        <td *ngIf="m.entrada_pu !== null && m.entrada_pu !== undefined">
+          ${{ m.entrada_pu }}
+        </td>
+        <td *ngIf="m.entrada_pt !== null && m.entrada_pt !== undefined">
+          ${{ m.entrada_pt }}
+        </td>
+        <td *ngIf="m.entrada_pu === null || m.entrada_pu === undefined"></td>
+        <td *ngIf="m.entrada_pt === null || m.entrada_pt === undefined"></td>
+
+        <!-- Salidas -->
+        <td>{{ m.salida_cant ?? "" }}</td>
+        <td *ngIf="m.salida_pu !== null && m.salida_pu !== undefined">
+          ${{ m.salida_pu }}
+        </td>
+        <td *ngIf="m.salida_pt !== null && m.salida_pt !== undefined">
+          ${{ m.salida_pt }}
+        </td>
+        <td *ngIf="m.salida_pu === null || m.salida_pu === undefined"></td>
+        <td *ngIf="m.salida_pt === null || m.salida_pt === undefined"></td>
+
+        <!-- Saldos -->
+        <td>{{ m.saldo_cant }}</td>
+        <td>${{ m.saldo_pu }}</td>
+        <td>${{ m.saldo_pt }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

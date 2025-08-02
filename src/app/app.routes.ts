@@ -5,6 +5,8 @@ import { superAdminGuard } from './guards/superadmin.guard'; // 👈 asegúrate 
 import { adminGuard } from './guards/admin.guard'; // 👈 asegúrate de importar el guard de admin
 import { empleadoGuard } from './guards/empleado.guard'; // 👈 asegúrate de importar el guard de empleado
 import { adminOempleadoGuard } from './guards/admin-empleado.guard';
+import { KardexInventariosComponent } from './pages/finanzas/kardex-inventarios/kardex-inventarios.component';
+import { TablaKardexComponent } from './pages/finanzas/kardex-inventarios/tabla-kardex/tabla-kardex.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -78,6 +80,15 @@ export const routes: Routes = [
       import('./pages/finanzas/finanzas.component').then(
         (m) => m.FinanzasComponent
       ), // 👈 solo estos pueden acceder
+  },
+
+  {
+    path: 'finanzas/kardex',
+    component: KardexInventariosComponent,
+  },
+  {
+    path: 'finanzas/kardex/:plataformaId',
+    component: TablaKardexComponent,
   },
 
   // Ruta wildcard opcional para rutas no existentes

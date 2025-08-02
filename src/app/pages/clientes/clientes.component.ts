@@ -34,13 +34,23 @@ export class ClientesComponent implements OnInit {
     });
   }
 
+  normalizarTexto(texto: string): string {
+    return texto.replace(/\D/g, ''); // elimina todo lo que no sea número
+  }
+
   filtrarClientes() {
-    const texto = this.busqueda.toLowerCase();
-    this.clientesFiltrados = this.clientes.filter(
-      (c) =>
-        c.nombre.toLowerCase().includes(texto) ||
-        c.contacto.toLowerCase().includes(texto)
-    );
+    const textoBusqueda = this.busqueda.toLowerCase();
+    const textoNormalizado = this.normalizarTexto(textoBusqueda);
+
+    this.clientesFiltrados = this.clientes.filter((c) => {
+      const nombre = c.nombre.toLowerCase();
+      const contactoNormalizado = this.normalizarTexto(c.contacto);
+
+      return (
+        nombre.includes(textoBusqueda) ||
+        contactoNormalizado.includes(textoNormalizado)
+      );
+    });
   }
 
   mostrarModal = false;

@@ -7,233 +7,282 @@
 
   <!-- 🔒 Detalles completos de la cuenta solo para admins -->
   <div *ngIf="isAdmin" class="border rounded-lg p-4 mb-6 bg-base-100 shadow">
-    <h3 class="text-lg font-semibold mb-2">Detalles completos de la cuenta</h3>
+    <h3 class="text-lg font-semibold mb-2">
+      {{ cuentaSeleccionada.plataforma?.nombre | uppercase }}:
+      {{ cuentaSeleccionada.correo }}
+    </h3>
     <div class="grid grid-cols-2 gap-4 text-sm">
-      <div><strong>Correo:</strong> {{ cuentaSeleccionada.correo }}</div>
       <div><strong>Clave:</strong> {{ cuentaSeleccionada.clave }}</div>
+      <div><strong>Proveedor:</strong> {{ cuentaSeleccionada.proveedor }}</div>
       <div>
         <strong>Fecha de compra:</strong> {{ cuentaSeleccionada.fecha_compra }}
       </div>
       <div>
-        <strong>Tiempo asignado:</strong>
-        {{ cuentaSeleccionada.tiempo_asignado }}
-      </div>
-      <div>
         <strong>Fecha de corte:</strong> {{ cuentaSeleccionada.fecha_corte }}
       </div>
-      <div><strong>Proveedor:</strong> {{ cuentaSeleccionada.proveedor }}</div>
-      <div>
-        <strong>Número de perfiles:</strong>
-        {{ cuentaSeleccionada.numero_perfiles }}
-      </div>
-      <div>
-        <strong>Plataforma:</strong> {{ cuentaSeleccionada.plataforma?.nombre }}
-      </div>
-      <div>
-        <strong>Costo total:</strong> ${{ cuentaSeleccionada.costo_total }}
-      </div>
-      <div><strong>Ganancia total:</strong> ${{ calcularGananciaTotal() }}</div>
     </div>
-  </div>
 
-  <!-- Tabla de perfiles -->
-  <div class="overflow-x-auto border rounded-lg p-4 mb-6 bg-base-100 shadow">
-    <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Cliente</th>
-          <th>Fecha Venta</th>
-          <th>Tiempo</th>
-          <th>Corte</th>
-          <th>Precio</th>
-          <th>Costo</th>
-          <th>Ganancia</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <ng-container *ngFor="let perfil of perfiles; let idx = index">
+    <!-- Tabla de perfiles -->
+    <div class="overflow-x-auto border rounded-lg p-4 mb-6 bg-base-100 shadow">
+      <table class="table table-zebra w-full">
+        <thead>
           <tr>
-            <!-- Número de perfil -->
-            <td class="font-bold">P{{ idx + 1 }}</td>
-
-            <!-- Si existe un perfil -->
-            <td>{{ perfil?.cliente?.nombre || "-" }}</td>
-
-            <!-- Fecha venta -->
-            <td>
-              <input
-                *ngIf="editandoId === perfil.id"
-                type="date"
-                class="input input-sm w-full"
-                [(ngModel)]="perfilEditado.fecha_venta"
-              />
-              <span *ngIf="editandoId !== perfil.id">{{
-                perfil.fecha_venta
-              }}</span>
-            </td>
-
-            <!-- Tiempo -->
-            <td>
-              <input
-                *ngIf="editandoId === perfil.id"
-                type="text"
-                class="input input-sm w-full"
-                [(ngModel)]="perfilEditado.tiempo_asignado"
-              />
-              <span *ngIf="editandoId !== perfil.id">{{
-                perfil.tiempo_asignado
-              }}</span>
-            </td>
-
-            <!-- Corte -->
-            <td>{{ perfil.fecha_corte }}</td>
-
-            <!-- Precio -->
-            <td>
-              <input
-                *ngIf="editandoId === perfil.id"
-                type="number"
-                step="0.01"
-                class="input input-sm w-full"
-                [(ngModel)]="perfilEditado.precio"
-              />
-              <span *ngIf="editandoId !== perfil.id">${{ perfil.precio }}</span>
-            </td>
-
-            <!-- Costo -->
-            <td>${{ perfil.costo }}</td>
-
-            <!-- Ganancia -->
-            <td>${{ perfil.ganancia }}</td>
-
-            <!-- Acciones -->
-            <td class="whitespace-nowrap space-x-1">
-              <ng-container
-                *ngIf="editandoId === perfil.id; else botonesNormales"
-              >
-                <button
-                  class="btn btn-sm btn-success"
-                  (click)="guardarCambios(perfil)"
-                >
-                  💾
-                </button>
-                <button
-                  class="btn btn-sm btn-outline"
-                  (click)="cancelarEdicion()"
-                >
-                  ❌
-                </button>
-              </ng-container>
-              <ng-template #botonesNormales>
-                <button
-                  class="btn btn-sm btn-outline"
-                  (click)="iniciarEdicion(perfil.id)"
-                >
-                  ✏️
-                </button>
-                <button
-                  class="btn btn-sm btn-outline text-red-600"
-                  (click)="eliminarPerfil(perfil.id)"
-                >
-                  🗑️
-                </button>
-                <button
-                  class="btn btn-sm btn-outline"
-                  (click)="copiarPlantilla(perfil, idx)"
-                  title="Copiar"
-                  *ngIf="perfil.cliente"
-                >
-                  <ng-container
-                    *ngIf="copiadoIdx === idx; else iconoPorDefecto"
-                  >
-                    ✅
-                  </ng-container>
-                  <ng-template #iconoPorDefecto>📋</ng-template>
-                </button>
-              </ng-template>
-            </td>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Fecha Venta</th>
+            <th>Tiempo</th>
+            <th>Corte</th>
+            <th>Precio</th>
+            <th>Costo</th>
+            <th>Ganancia</th>
+            <th></th>
           </tr>
-        </ng-container>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let perfil of perfiles; let idx = index">
+            <tr>
+              <!-- Número de perfil -->
+              <td class="font-bold">P{{ idx + 1 }}</td>
 
-        <!-- Espacios libres -->
-        <ng-container
-          *ngFor="
-            let i of [].constructor(
-              cuentaSeleccionada.numero_perfiles - perfiles.length
-            );
-            let idx = index
-          "
-        >
-          <tr>
-            <td class="font-bold">P{{ perfiles.length + idx + 1 }}</td>
-            <td colspan="7" class="text-center text-gray-400">
-              <ng-container
-                *ngIf="
-                  filaSeleccionada === perfiles.length + idx;
-                  else mostrarBoton
-                "
-              >
-                <div class="grid grid-cols-4 gap-2">
-                  <select
-                    class="select select-bordered w-full"
-                    [(ngModel)]="nuevoPerfil.clienteId"
-                  >
-                    <option [ngValue]="0" disabled selected>Cliente</option>
-                    <option
-                      *ngFor="let cliente of clientes"
-                      [value]="cliente.id"
-                    >
-                      {{ cliente.nombre }}
-                    </option>
-                  </select>
-                  <input
-                    type="date"
-                    class="input input-bordered"
-                    [(ngModel)]="nuevoPerfil.fecha_venta"
-                  />
-                  <input
-                    type="text"
-                    class="input input-bordered"
-                    [(ngModel)]="nuevoPerfil.tiempo_asignado"
-                    placeholder="1 mes"
-                  />
-                  <input
-                    type="number"
-                    class="input input-bordered"
-                    [(ngModel)]="nuevoPerfil.precio"
-                    placeholder="Precio $$"
-                  />
-                </div>
-                <div class="mt-2 flex justify-center gap-2">
+              <!-- Si existe un perfil -->
+              <td>{{ perfil?.cliente?.nombre || "-" }}</td>
+
+              <!-- Fecha venta -->
+              <td>
+                <input
+                  *ngIf="editandoId === perfil.id"
+                  type="date"
+                  class="input input-sm w-full"
+                  [(ngModel)]="perfilEditado.fecha_venta"
+                />
+                <span *ngIf="editandoId !== perfil.id">{{
+                  perfil.fecha_venta
+                }}</span>
+              </td>
+
+              <!-- Tiempo -->
+              <td>
+                <input
+                  *ngIf="editandoId === perfil.id"
+                  type="text"
+                  class="input input-sm w-full"
+                  [(ngModel)]="perfilEditado.tiempo_asignado"
+                />
+                <span *ngIf="editandoId !== perfil.id">{{
+                  perfil.tiempo_asignado
+                }}</span>
+              </td>
+
+              <!-- Corte -->
+              <td>{{ perfil.fecha_corte }}</td>
+
+              <!-- Precio -->
+              <td>
+                <input
+                  *ngIf="editandoId === perfil.id"
+                  type="number"
+                  step="0.01"
+                  class="input input-sm w-full"
+                  [(ngModel)]="perfilEditado.precio"
+                />
+                <span *ngIf="editandoId !== perfil.id"
+                  >${{ perfil.precio }}</span
+                >
+              </td>
+
+              <!-- Costo -->
+              <td>${{ perfil.costo }}</td>
+
+              <!-- Ganancia -->
+              <td>${{ perfil.ganancia }}</td>
+
+              <!-- Acciones -->
+              <td class="whitespace-nowrap space-x-1">
+                <ng-container
+                  *ngIf="editandoId === perfil.id; else botonesNormales"
+                >
                   <button
                     class="btn btn-sm btn-success"
-                    (click)="registrarPerfil()"
+                    (click)="guardarCambios(perfil)"
                   >
-                    Guardar
+                    💾
                   </button>
                   <button
                     class="btn btn-sm btn-outline"
-                    (click)="filaSeleccionada = null"
+                    (click)="cancelarEdicion()"
                   >
-                    Cancelar
+                    ❌
                   </button>
-                </div>
-              </ng-container>
-              <ng-template #mostrarBoton>
-                <button
-                  class="btn btn-sm btn-outline btn-accent"
-                  (click)="venderEnPosicion(perfiles.length + idx)"
+                </ng-container>
+                <ng-template #botonesNormales>
+                  <button
+                    class="btn btn-sm btn-outline"
+                    (click)="iniciarEdicion(perfil.id)"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline text-red-600"
+                    (click)="eliminarPerfil(perfil.id)"
+                  >
+                    🗑️
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline"
+                    (click)="copiarPlantilla(perfil, idx)"
+                    title="Copiar"
+                    *ngIf="perfil.cliente"
+                  >
+                    <ng-container
+                      *ngIf="copiadoIdx === idx; else iconoPorDefecto"
+                    >
+                      ✅
+                    </ng-container>
+                    <ng-template #iconoPorDefecto>📋</ng-template>
+                  </button>
+                </ng-template>
+              </td>
+            </tr>
+          </ng-container>
+
+          <!-- Espacios libres -->
+          <ng-container *ngFor="let i of espaciosLibres; let idx = index">
+            <tr>
+              <td class="font-bold">P{{ perfiles.length + idx + 1 }}</td>
+              <td colspan="7" class="text-center text-gray-400">
+                <ng-container
+                  *ngIf="
+                    filaSeleccionada === perfiles.length + idx;
+                    else mostrarBoton
+                  "
                 >
-                  + Vender
-                </button>
-              </ng-template>
-            </td>
-            <td></td>
-          </tr>
-        </ng-container>
-      </tbody>
-    </table>
+                  <div class="grid grid-cols-4 gap-2">
+                    <select
+                      class="select select-bordered w-full"
+                      [(ngModel)]="nuevoPerfil.clienteId"
+                    >
+                      <option [ngValue]="0" disabled selected>Cliente</option>
+                      <option
+                        *ngFor="let cliente of clientes"
+                        [value]="cliente.id"
+                      >
+                        {{ cliente.nombre }}
+                      </option>
+                    </select>
+                    <input
+                      type="date"
+                      class="input input-bordered"
+                      [(ngModel)]="nuevoPerfil.fecha_venta"
+                    />
+                    <input
+                      type="text"
+                      class="input input-bordered"
+                      [(ngModel)]="nuevoPerfil.tiempo_asignado"
+                      placeholder="1 mes"
+                    />
+                    <input
+                      type="number"
+                      class="input input-bordered"
+                      [(ngModel)]="nuevoPerfil.precio"
+                      placeholder="Precio $$"
+                    />
+                  </div>
+                  <div class="mt-2 flex justify-center gap-2">
+                    <button
+                      class="btn btn-sm btn-success"
+                      (click)="registrarPerfil()"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline"
+                      (click)="filaSeleccionada = null"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </ng-container>
+                <ng-template #mostrarBoton>
+                  <button
+                    class="btn btn-sm btn-outline btn-accent"
+                    (click)="abrirModal()"
+                  >
+                    + Vender
+                  </button>
+                </ng-template>
+              </td>
+              <td></td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de venta de perfil -->
+<div
+  *ngIf="mostrarModalVender"
+  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+>
+  <div
+    class="bg-white dark:bg-base-100 p-6 rounded-lg shadow-md w-full max-w-md"
+  >
+    <h2 class="text-lg font-semibold mb-4">Vender Perfil</h2>
+
+    <div class="grid grid-cols-1 gap-4">
+      <div class="relative w-full">
+        <!-- Input de búsqueda -->
+        <input
+          type="text"
+          class="input input-bordered w-full"
+          placeholder="Cliente (nombre o numero)"
+          [(ngModel)]="busquedaCliente"
+          (input)="filtrarClientes()"
+          (focus)="mostrarListaClientes = true"
+        />
+
+        <!-- Lista de resultados -->
+        <ul
+          *ngIf="mostrarListaClientes && clientesFiltrados.length > 0"
+          class="absolute z-50 bg-white border w-full max-h-48 overflow-y-auto rounded shadow"
+        >
+          <li
+            *ngFor="let cliente of clientesFiltrados"
+            class="p-2 hover:bg-gray-100 cursor-pointer"
+            (click)="seleccionarCliente(cliente)"
+          >
+            {{ cliente.nombre }} ({{ cliente.contacto }})
+          </li>
+        </ul>
+      </div>
+
+      <input
+        type="date"
+        class="input input-bordered w-full"
+        [(ngModel)]="nuevoPerfil.fecha_venta"
+      />
+      <input
+        type="text"
+        class="input input-bordered w-full"
+        [(ngModel)]="nuevoPerfil.tiempo_asignado"
+        placeholder="1 mes"
+      />
+      <input
+        type="number"
+        class="input input-bordered w-full"
+        [(ngModel)]="nuevoPerfil.precio"
+        placeholder="Precio Venta"
+      />
+    </div>
+
+    <div class="flex justify-end mt-4 gap-2">
+      <button class="btn btn-sm btn-success" (click)="registrarPerfil()">
+        Guardar
+      </button>
+      <button class="btn btn-sm btn-outline" (click)="cerrarModal()">
+        Cancelar
+      </button>
+    </div>
   </div>
 </div>
