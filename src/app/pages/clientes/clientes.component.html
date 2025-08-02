@@ -40,34 +40,66 @@
     </button>
   </div>
 
-  <!-- Tabla de clientes -->
-  <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow">
-    <table class="table table-zebra w-full">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Nombre</th>
-          <th>Numero Tlf</th>
-          <th>Clave</th>
-          <th>Fecha de registro</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let cliente of clientesFiltrados; let i = index">
-          <td>{{ i + 1 }}</td>
-          <td>{{ cliente.nombre }}</td>
-          <td>{{ cliente.contacto }}</td>
-          <td>{{ cliente.clave }}</td>
-          <td>{{ cliente.fecha_creacion | date : "short" }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Tabla de clientes sin numero -->
+  <div *ngIf="clientesFiltradosIncompletos.length > 0">
+    <h2 class="text-lg font-semibold mb-2">Clientes sin número</h2>
+    <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow mb-8">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Número Tlf</th>
+            <th>Clave</th>
+            <th>Fecha de registro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let cliente of clientesFiltradosIncompletos; let i = index"
+          >
+            <td>{{ i + 1 }}</td>
+            <td>{{ cliente.nombre || "Sin nombre" }}</td>
+            <td>{{ cliente.contacto || "Sin número" }}</td>
+            <td>{{ cliente.clave }}</td>
+            <td>{{ cliente.fecha_creacion | date : "short" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
-</div>
 
-<app-modal-nuevo-cliente
-  *ngIf="mostrarModal"
-  [clientes]="clientes"
-  (cerrar)="mostrarModal = false"
-  (guardado)="cargarClientes()"
-></app-modal-nuevo-cliente>
+  <!-- Tabla de clientes completos -->
+  <div *ngIf="clientesFiltradosCompletos.length > 0">
+    <h2 class="text-lg font-semibold mb-2">Base de clientes</h2>
+    <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Número Tlf</th>
+            <th>Clave</th>
+            <th>Fecha de registro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cliente of clientesFiltradosCompletos; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.contacto }}</td>
+            <td>{{ cliente.clave }}</td>
+            <td>{{ cliente.fecha_creacion | date : "short" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-modal-nuevo-cliente
+    *ngIf="mostrarModal"
+    [clientes]="clientes"
+    (cerrar)="mostrarModal = false"
+    (guardado)="cargarClientes()"
+  ></app-modal-nuevo-cliente>
+</div>

@@ -232,7 +232,6 @@
 
     <div class="grid grid-cols-1 gap-4">
       <div class="relative w-full">
-        <!-- Input de búsqueda -->
         <input
           type="text"
           class="input input-bordered w-full"
@@ -240,22 +239,25 @@
           [(ngModel)]="busquedaCliente"
           (input)="filtrarClientes()"
           (focus)="mostrarListaClientes = true"
+          (blur)="ocultarListaClientes()"
         />
 
-        <!-- Lista de resultados -->
         <ul
           *ngIf="mostrarListaClientes && clientesFiltrados.length > 0"
           class="absolute z-50 bg-white border w-full max-h-48 overflow-y-auto rounded shadow"
         >
           <li
-            *ngFor="let cliente of clientesFiltrados"
+            *ngFor="let cliente of clientesFiltrados.slice(0, 2)"
+            (mousedown)="seleccionarCliente(cliente)"
             class="p-2 hover:bg-gray-100 cursor-pointer"
-            (click)="seleccionarCliente(cliente)"
           >
-            {{ cliente.nombre }} ({{ cliente.contacto }})
+            {{ cliente.nombre }} ({{ cliente.contacto || "sin número" }})
           </li>
+          <!-- ✅ bien cerrado -->
         </ul>
+        <!-- ✅ bien cerrado -->
       </div>
+      <!-- ✅ bien cerrado -->
 
       <input
         type="date"

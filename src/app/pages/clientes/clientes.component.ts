@@ -14,6 +14,9 @@ import * as Papa from 'papaparse';
 export class ClientesComponent implements OnInit {
   clientes: any[] = [];
   clientesFiltrados: any[] = [];
+  clientesFiltradosCompletos: any[] = [];
+  clientesFiltradosIncompletos: any[] = [];
+
   busqueda: string = '';
 
   constructor(private clienteService: ClienteService) {}
@@ -35,22 +38,41 @@ export class ClientesComponent implements OnInit {
   }
 
   normalizarTexto(texto: string): string {
-    return texto.replace(/\D/g, ''); // elimina todo lo que no sea número
+    return (texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   filtrarClientes() {
     const textoBusqueda = this.busqueda.toLowerCase();
     const textoNormalizado = this.normalizarTexto(textoBusqueda);
 
-    this.clientesFiltrados = this.clientes.filter((c) => {
-      const nombre = c.nombre.toLowerCase();
-      const contactoNormalizado = this.normalizarTexto(c.contacto);
+    const resultados = this.clientes.filter((c) => {
+      const nombre = (c.nombre || '').toLowerCase();
+      const contactoNormalizado = this.normalizarTexto(c.contacto || '');
 
       return (
         nombre.includes(textoBusqueda) ||
         contactoNormalizado.includes(textoNormalizado)
       );
     });
+
+    this.clientesFiltradosIncompletos = resultados.filter((c) => {
+      const nombre = (c.nombre || '').trim().toLowerCase();
+      const contacto = (c.contacto || '').trim();
+
+      return (
+        !nombre || // sin nombre
+        !contacto || // sin número
+        nombre === 'cliente sin registrar' // nombre genérico
+      );
+    });
+
+    this.clientesFiltradosCompletos = resultados.filter(
+      (c) => !this.clientesFiltradosIncompletos.includes(c)
+    );
   }
 
   mostrarModal = false;

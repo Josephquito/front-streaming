@@ -48,6 +48,10 @@ export class PerfilesComponent implements OnInit {
     return this.auth.getRole()?.toLowerCase() === 'admin';
   }
 
+  volverAtras() {
+    this.router.navigate(['/cuentas']);
+  }
+
   cargarCuenta() {
     this.cuentaService.getCuenta(this.cuentaId).subscribe({
       next: (cuenta) => {
@@ -71,6 +75,30 @@ export class PerfilesComponent implements OnInit {
     });
   }
 
+  mostrarModalVender = false;
+
+  abrirModal() {
+    this.mostrarModalVender = true;
+    this.nuevoPerfil = {
+      clienteId: 0,
+      fecha_venta: new Date().toISOString().split('T')[0],
+      tiempo_asignado: '',
+      precio: undefined,
+    };
+  }
+
+  cerrarModal() {
+    this.mostrarModalVender = false;
+    this.busquedaCliente = '';
+    this.clientesFiltrados = [];
+    this.nuevoPerfil = {
+      clienteId: 0,
+      fecha_venta: new Date().toISOString().split('T')[0],
+      tiempo_asignado: '',
+      precio: undefined,
+    };
+  }
+
   cargarClientes() {
     this.clienteService.getClientes().subscribe({
       next: (clientes) => {
@@ -90,7 +118,12 @@ export class PerfilesComponent implements OnInit {
   }
 
   normalizarTexto(texto: string): string {
-    return texto.replace(/\D/g, ''); // Elimina todo lo que no sea dígito
+    return (texto || '')
+      .normalize('NFD') // elimina acentos
+      .replace(/[\u0300-\u036f]/g, '') // sigue quitando tildes
+      .replace(/[^a-zA-Z0-9+]/g, '') // quita todo menos letras, números y +
+      .toLowerCase()
+      .trim();
   }
 
   clientesFiltrados: any[] = [];
@@ -98,17 +131,19 @@ export class PerfilesComponent implements OnInit {
   mostrarListaClientes = false;
 
   filtrarClientes() {
-    const texto = this.normalizarTexto(this.busquedaCliente.toLowerCase());
+    const textoNombre = (this.busquedaCliente || '').toLowerCase().trim();
+    const textoNumerico = this.normalizarTexto(this.busquedaCliente || '');
 
-    this.clientesFiltrados = this.clientes.filter((c) => {
-      const nombre = c.nombre.toLowerCase();
-      const contacto = this.normalizarTexto(c.contacto);
+    let resultados = this.clientes.filter((c) => {
+      const nombre = (c.nombre || '').toLowerCase().trim();
+      const contacto = this.normalizarTexto(c.contacto || '');
 
-      return (
-        nombre.includes(this.busquedaCliente.toLowerCase()) ||
-        contacto.includes(texto)
-      );
+      return nombre.includes(textoNombre) || contacto.includes(textoNumerico);
     });
+
+    this.clientesFiltrados = resultados.sort((a, b) =>
+      a.nombre.localeCompare(b.nombre)
+    );
   }
 
   seleccionarCliente(cliente: any) {
@@ -117,17 +152,13 @@ export class PerfilesComponent implements OnInit {
     this.mostrarListaClientes = false;
   }
 
-  volverAtras() {
-    this.router.navigate(['/cuentas']);
-  }
-
-  registrarPerfil() {
+  guardarPerfilConClienteId(clienteId: number) {
     const datos: any = {
       ...this.nuevoPerfil,
       cuentaId: this.cuentaSeleccionada.id,
+      clienteId,
     };
 
-    // Si precio está vacío o inválido, no lo envíes
     if (
       datos.precio === undefined ||
       datos.precio === null ||
@@ -135,31 +166,135 @@ export class PerfilesComponent implements OnInit {
     ) {
       delete datos.precio;
     } else {
-      datos.precio = Number(datos.precio); // Asegura que sea número
+      datos.precio = Number(datos.precio);
     }
 
     this.perfilService.crearPerfil(datos).subscribe({
       next: () => {
         this.cargarPerfiles();
-        this.cargarCuenta(); // 🔄 Actualiza también los datos de la cuenta
-
-        this.cerrarModal(); // ❌ Cierra la modal correctamente
-
-        // Reinicia nuevoPerfil con valores por defecto
-        this.nuevoPerfil = {
-          clienteId: 0,
-          fecha_venta: new Date().toISOString().split('T')[0],
-          tiempo_asignado: '',
-          precio: undefined,
-        };
-
-        this.busquedaCliente = '';
-        this.clientesFiltrados = [];
+        this.cargarCuenta();
+        this.cerrarModal();
       },
       error: (err) => {
         console.error('Error al registrar perfil', err);
       },
     });
+  }
+
+  generarNombreClienteAuto(): string {
+    const usados = this.clientes
+      .map((c) => c.nombre)
+      .filter((n) => /^Cliente \d+$/.test(n))
+      .map((n) => parseInt(n.split(' ')[1]))
+      .sort((a, b) => a - b);
+
+    let siguiente = 1;
+    for (let i = 0; i < usados.length; i++) {
+      if (usados[i] !== siguiente) break;
+      siguiente++;
+    }
+
+    return `Cliente ${siguiente}`;
+  }
+
+  generarClaveAleatoria(): string {
+    const caracteres =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let clave = 'cliente';
+    for (let i = 0; i < 6; i++) {
+      clave += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return clave;
+  }
+
+  ocultarListaClientes() {
+    setTimeout(() => {
+      this.mostrarListaClientes = false;
+    }, 200); // Espera breve para que se capture el click del item antes de ocultar
+  }
+
+  registrarPerfil() {
+    const texto = this.busquedaCliente.trim();
+
+    if (this.nuevoPerfil.clienteId === 0 && texto) {
+      const esNumero = /^[\s+]*\d[\d\s-]*$/.test(texto);
+
+      const nombre = esNumero ? this.generarNombreClienteAuto() : texto;
+
+      const contacto = esNumero ? texto : '';
+      const clave = this.generarClaveAleatoria();
+
+      const nombreNormalizado = this.normalizarTexto(nombre);
+      const contactoNormalizado = this.normalizarTexto(contacto);
+
+      // 🟢 Si coincide por número → usar ese cliente
+      const porNumero = this.clientes.find((c) => {
+        return (
+          this.normalizarTexto(c.contacto || '') === contactoNormalizado &&
+          contactoNormalizado !== ''
+        );
+      });
+
+      // 🟢 Si coincide por nombre (y contacto vacío) → usar ese cliente
+      const porNombre = this.clientes.find((c) => {
+        return (
+          this.normalizarTexto(c.nombre || '') === nombreNormalizado &&
+          !contactoNormalizado &&
+          !c.contacto // contacto vacío
+        );
+      });
+
+      const clienteCoincidente = porNumero || porNombre;
+
+      if (clienteCoincidente) {
+        // ✅ Seleccionar y continuar
+        this.nuevoPerfil.clienteId = clienteCoincidente.id;
+        this.busquedaCliente = `${clienteCoincidente.nombre} (${
+          clienteCoincidente.contacto || 'sin número'
+        })`;
+        this.mostrarListaClientes = false;
+
+        this.guardarPerfilConClienteId(clienteCoincidente.id);
+        return;
+      }
+
+      // 🔒 Validación extra por combinación exacta
+      const yaExiste = this.clientes.some((c) => {
+        const nombreC = this.normalizarTexto(c.nombre || '');
+        const contactoC = this.normalizarTexto(c.contacto || '');
+
+        return (
+          (nombreC === nombreNormalizado && !contactoNormalizado) ||
+          (contactoC === contactoNormalizado && !nombreNormalizado) ||
+          (nombreC === nombreNormalizado && contactoC === contactoNormalizado)
+        );
+      });
+
+      if (yaExiste) {
+        alert('Ya existe un cliente con ese nombre o número.');
+        return;
+      }
+
+      // 🆕 Crear nuevo cliente
+      const nuevoCliente = {
+        nombre,
+        contacto,
+        clave,
+      };
+
+      this.clienteService.crearCliente(nuevoCliente).subscribe({
+        next: (clienteCreado) => {
+          this.guardarPerfilConClienteId(clienteCreado.id);
+        },
+        error: (err) => {
+          console.error('Error al crear cliente sin registrar', err);
+        },
+      });
+    } else if (this.nuevoPerfil.clienteId !== 0) {
+      this.guardarPerfilConClienteId(this.nuevoPerfil.clienteId);
+    } else {
+      alert('Por favor seleccione o escriba un nombre/número de cliente.');
+    }
   }
 
   eliminarPerfil(perfilId: number) {
@@ -208,13 +343,6 @@ export class PerfilesComponent implements OnInit {
 
   filaSeleccionada: number | null = null;
 
-  calcularGananciaTotal(): string {
-    const total = this.perfiles.reduce((sum, perfil) => {
-      return sum + (parseFloat(perfil.ganancia) || 0);
-    }, 0);
-    return total.toFixed(2);
-  }
-
   copiadoIdx: number | null = null;
 
   copiarPlantilla(perfil: any, idx: number) {
@@ -248,29 +376,5 @@ export class PerfilesComponent implements OnInit {
   formatearFecha(fecha: string): string {
     const [a, m, d] = fecha.split('-');
     return `${parseInt(d)}/${parseInt(m)}/${a.slice(2)}`;
-  }
-
-  mostrarModalVender = false;
-
-  abrirModal() {
-    this.mostrarModalVender = true;
-    this.nuevoPerfil = {
-      clienteId: 0,
-      fecha_venta: new Date().toISOString().split('T')[0],
-      tiempo_asignado: '',
-      precio: undefined,
-    };
-  }
-
-  cerrarModal() {
-    this.mostrarModalVender = false;
-    this.busquedaCliente = '';
-    this.clientesFiltrados = [];
-    this.nuevoPerfil = {
-      clienteId: 0,
-      fecha_venta: new Date().toISOString().split('T')[0],
-      tiempo_asignado: '',
-      precio: undefined,
-    };
   }
 }
