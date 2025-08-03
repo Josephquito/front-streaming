@@ -533,6 +533,7 @@ export class CuentasComponent implements OnInit {
     this.cuentaOriginalSeleccionada = cuenta;
     this.cuentaReemplazo = {
       id: cuenta.id,
+      fecha_compra: dayjs().format('YYYY-MM-DD'), // ← Aquí se asigna la fecha actual
     };
     this.cuentasDisponibles = [];
     this.cerrarDropdown();

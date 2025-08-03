@@ -40,66 +40,202 @@
     </button>
   </div>
 
-  <!-- Tabla de clientes sin numero -->
-  <div *ngIf="clientesFiltradosIncompletos.length > 0">
-    <h2 class="text-lg font-semibold mb-2">Clientes sin número</h2>
-    <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow mb-8">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Nombre</th>
-            <th>Número Tlf</th>
-            <th>Clave</th>
-            <th>Fecha de registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            *ngFor="let cliente of clientesFiltradosIncompletos; let i = index"
-          >
-            <td>{{ i + 1 }}</td>
-            <td>{{ cliente.nombre || "Sin nombre" }}</td>
-            <td>{{ cliente.contacto || "Sin número" }}</td>
-            <td>{{ cliente.clave }}</td>
-            <td>{{ cliente.fecha_creacion | date : "short" }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Contenedor flex para las 2 tablas lado a lado -->
+  <div class="flex flex-wrap gap-4">
+    <!-- Tabla de clientes sin número -->
+    <div
+      *ngIf="clientesFiltradosIncompletos.length > 0"
+      class="flex-1 min-w-[350px]"
+    >
+      <h2 class="text-lg font-semibold mb-2">Clientes sin número</h2>
+      <div
+        class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow mb-4"
+      >
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Número Tlf</th>
+              <th>Clave</th>
+              <th>Cuentas activas</th>
+              <th class="text-right"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="
+                let cliente of clientesFiltradosIncompletos;
+                let i = index
+              "
+              (click)="irAInfo(cliente.id)"
+              class="hover:bg-base-200 cursor-pointer"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>{{ cliente.nombre || "Sin nombre" }}</td>
+              <td>{{ cliente.contacto || "Sin número" }}</td>
+              <td>{{ cliente.clave }}</td>
+              <td>{{ cliente.cuentas_activas?.length || 0 }}</td>
+              <td
+                class="text-right relative z-10"
+                (click)="$event.stopPropagation()"
+              >
+                <div class="relative inline-block">
+                  <button
+                    class="btn btn-sm btn-ghost btn-circle"
+                    (click)="toggleDropdown($event, cliente.id)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v.01M12 12v.01M12 18v.01"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tabla de clientes completos -->
+    <div
+      *ngIf="clientesFiltradosCompletos.length > 0"
+      class="flex-1 min-w-[350px]"
+    >
+      <h2 class="text-lg font-semibold mb-2">Base de clientes</h2>
+      <div
+        class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow mb-4"
+      >
+        <table class="table w-full">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Clave</th>
+              <th>Cuentas activas</th>
+              <th class="text-right"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let cliente of clientesFiltradosCompletos; let i = index"
+              (click)="irAInfo(cliente.id)"
+              class="hover:bg-base-200 cursor-pointer"
+            >
+              <td>{{ i + 1 }}</td>
+              <td>{{ cliente.nombre }}</td>
+              <td>{{ cliente.contacto }}</td>
+              <td>{{ cliente.clave }}</td>
+              <td>{{ cliente.cuentas_activas?.length || 0 }}</td>
+              <td
+                class="text-right relative z-10"
+                (click)="$event.stopPropagation()"
+              >
+                <div class="relative inline-block">
+                  <button
+                    class="btn btn-sm btn-ghost btn-circle"
+                    (click)="toggleDropdown($event, cliente.id)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v.01M12 12v.01M12 18v.01"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- Tabla de clientes completos -->
-  <div *ngIf="clientesFiltradosCompletos.length > 0">
-    <h2 class="text-lg font-semibold mb-2">Base de clientes</h2>
-    <div class="overflow-x-auto border rounded-lg p-4 bg-base-100 shadow">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Nombre</th>
-            <th>Número Tlf</th>
-            <th>Clave</th>
-            <th>Fecha de registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cliente of clientesFiltradosCompletos; let i = index">
-            <td>{{ i + 1 }}</td>
-            <td>{{ cliente.nombre }}</td>
-            <td>{{ cliente.contacto }}</td>
-            <td>{{ cliente.clave }}</td>
-            <td>{{ cliente.fecha_creacion | date : "short" }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Menú flotante global -->
+  <!-- Menú flotante global -->
+  <div
+    *ngIf="dropdownAbierto !== null"
+    #menuOpcionesRef
+    class="fixed z-[9999] w-44 bg-white border rounded shadow-lg"
+    [ngStyle]="{ top: dropdownPosY + 'px', left: dropdownPosX + 'px' }"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Si es incompleto, mostrar Añadir Cliente -->
+    <button
+      *ngIf="clienteEsIncompleto"
+      class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+      (click)="anadirCliente(clienteSeleccionado); cerrarDropdown()"
+    >
+      Añadir Cliente
+    </button>
+
+    <!-- Si es completo, mostrar Editar -->
+    <button
+      class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+      (click)="abrirModalEditar(clienteSeleccionado); cerrarDropdown()"
+    >
+      Editar
+    </button>
+
+    <!-- Eliminar siempre -->
+    <button
+      class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+      (click)="eliminarCliente(clienteSeleccionado?.id); cerrarDropdown()"
+    >
+      Eliminar
+    </button>
+  </div>
+
+  <!-- Modal: Añadir Teléfono -->
+  <div
+    *ngIf="mostrarModalTelefono"
+    class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-sm">
+      <h3 class="text-lg font-semibold mb-4">Añadir número de teléfono</h3>
+
+      <input
+        type="text"
+        [(ngModel)]="telefonoNuevo"
+        placeholder="Número de teléfono"
+        class="input input-bordered w-full mb-4"
+      />
+
+      <div class="flex justify-end gap-2">
+        <button class="btn" (click)="cerrarModalTelefono()">Cancelar</button>
+        <button class="btn btn-primary" (click)="guardarTelefono()">
+          Guardar
+        </button>
+      </div>
     </div>
   </div>
 
   <app-modal-nuevo-cliente
-    *ngIf="mostrarModal"
+    *ngIf="mostrarModalCliente"
     [clientes]="clientes"
-    (cerrar)="mostrarModal = false"
-    (guardado)="cargarClientes()"
+    [clienteEditar]="clienteEditar"
+    (cerrar)="cerrarModalCliente()"
+    (guardado)="recargarClientes()"
   ></app-modal-nuevo-cliente>
 </div>

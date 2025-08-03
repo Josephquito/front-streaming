@@ -7,6 +7,7 @@ import { CuentasService } from '../../services/cuentas.service';
 import { PerfilService } from '../../services/perfiles.service';
 import { ClienteService } from '../../services/cliente.service';
 import { AuthService } from '../../guards/auth.service';
+import dayjs from 'dayjs';
 @Component({
   selector: 'app-perfiles',
   standalone: true,
@@ -67,7 +68,8 @@ export class PerfilesComponent implements OnInit {
     this.perfilService.getPerfilesByCuenta(this.cuentaId).subscribe({
       next: (perfilesExistentes) => {
         console.log('✅ Perfiles recibidos:', perfilesExistentes);
-        this.perfiles = perfilesExistentes;
+        // 👉 Filtramos solo los que están activos
+        this.perfiles = perfilesExistentes.filter((p) => p.activo !== false);
       },
       error: (err) => {
         console.error('Error al cargar perfiles', err);
@@ -81,7 +83,8 @@ export class PerfilesComponent implements OnInit {
     this.mostrarModalVender = true;
     this.nuevoPerfil = {
       clienteId: 0,
-      fecha_venta: new Date().toISOString().split('T')[0],
+      fecha_venta: dayjs().format('YYYY-MM-DD'),
+
       tiempo_asignado: '',
       precio: undefined,
     };
@@ -93,7 +96,8 @@ export class PerfilesComponent implements OnInit {
     this.clientesFiltrados = [];
     this.nuevoPerfil = {
       clienteId: 0,
-      fecha_venta: new Date().toISOString().split('T')[0],
+      fecha_venta: dayjs().format('YYYY-MM-DD'),
+
       tiempo_asignado: '',
       precio: undefined,
     };

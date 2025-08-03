@@ -5,12 +5,19 @@ import { Observable } from 'rxjs';
 import { HttpHeaders } from '@angular/common/http';
 
 export interface Perfil {
-  id?: number;
+  id: number;
   cuentaId: number;
   clienteId: number;
   fecha_venta: string;
   tiempo_asignado: string;
   precio: number;
+  activo?: boolean;
+  correo_asignado?: string;
+  plataforma_asignada?: string;
+  cuenta?: {
+    correo: string;
+    plataforma: { nombre: string };
+  };
 }
 
 @Injectable({ providedIn: 'root' })

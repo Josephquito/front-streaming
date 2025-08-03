@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Output, Input, OnInit } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Output,
+  Input,
+  OnInit,
+  ElementRef,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -18,6 +25,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ModalNuevoClienteComponent implements OnInit {
   @Input() clientes: any[] = [];
+  @Input() clienteEditar: any = null;
   @Output() cerrar = new EventEmitter<void>();
   @Output() guardado = new EventEmitter<void>();
 
@@ -28,29 +36,37 @@ export class ModalNuevoClienteComponent implements OnInit {
   constructor(private fb: FormBuilder, private clienteService: ClienteService) {
     this.form = this.fb.group({
       nombre: [''],
-      contacto: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern('^\\+[0-9]{9,15}$'),
-          this.contactoDuplicadoValidator,
-        ],
-      ],
+      contacto: ['', [Validators.required, this.contactoDuplicadoValidator]],
       clave: [''],
     });
   }
 
   ngOnInit(): void {
-    // Aplica el validador personalizado cuando ya tengas los clientes
+    // Si se está editando, cargar valores en el formulario
+    if (this.clienteEditar) {
+      this.form.patchValue({
+        nombre: this.clienteEditar.nombre,
+        contacto: this.clienteEditar.contacto,
+        clave: this.clienteEditar.clave,
+      });
+    }
+
+    // Validación de nombre duplicado
     this.form.get('nombre')?.setValidators(this.nombreDuplicadoValidator);
     this.form.get('nombre')?.updateValueAndValidity();
   }
 
-  contactoDuplicadoValidator = (control: any) => {
+  contactoDuplicadoValidator = (
+    control: AbstractControl
+  ): ValidationErrors | null => {
     const contacto = control.value?.trim();
     if (!contacto || !this.clientes) return null;
 
-    const yaExiste = this.clientes.some((c) => c.contacto.trim() === contacto);
+    const yaExiste = this.clientes.some(
+      (c) =>
+        c.contacto.trim() === contacto &&
+        (!this.clienteEditar || c.id !== this.clienteEditar.id)
+    );
 
     return yaExiste ? { contactoDuplicado: true } : null;
   };
@@ -62,13 +78,18 @@ export class ModalNuevoClienteComponent implements OnInit {
     if (!nombre || !this.clientes) return null;
 
     const yaExiste = this.clientes.some(
-      (c) => c.nombre.trim().toLowerCase() === nombre
+      (c) =>
+        c.nombre.trim().toLowerCase() === nombre &&
+        (!this.clienteEditar || c.id !== this.clienteEditar.id)
     );
 
     return yaExiste ? { nombreDuplicado: true } : null;
   };
 
   cerrarModal() {
+    this.form.reset();
+    this.errorMsg = '';
+    this.cargando = false;
     this.cerrar.emit();
   }
 
@@ -77,23 +98,12 @@ export class ModalNuevoClienteComponent implements OnInit {
 
     const clienteData = { ...this.form.value };
 
-    // Generar nombre automáticamente si está vacío
+    // Generar nombre si está vacío
     if (!clienteData.nombre?.trim()) {
-      const usados = this.clientes
-        .map((c) => c.nombre)
-        .filter((n) => /^Cliente \d+$/.test(n))
-        .map((n) => parseInt(n.split(' ')[1]))
-        .sort((a, b) => a - b);
-
-      let siguiente = 1;
-      for (let i = 0; i < usados.length; i++) {
-        if (usados[i] !== siguiente) break;
-        siguiente++;
-      }
-
-      clienteData.nombre = `Cliente ${siguiente}`;
+      clienteData.nombre = this.generarNombreDisponible();
     }
 
+    // Generar clave si está vacía
     if (!clienteData.clave?.trim()) {
       clienteData.clave = this.generarClaveAleatoria();
     }
@@ -101,18 +111,53 @@ export class ModalNuevoClienteComponent implements OnInit {
     this.cargando = true;
     this.errorMsg = '';
 
-    this.clienteService.crearCliente(clienteData).subscribe({
-      next: () => {
-        this.cargando = false;
-        this.guardado.emit();
-        this.cerrarModal();
-      },
-      error: (err) => {
-        this.cargando = false;
-        this.errorMsg = err?.error?.message || 'Error al guardar el cliente';
-      },
-    });
+    if (this.clienteEditar) {
+      // Modo edición
+      this.clienteService
+        .editarCliente(this.clienteEditar.id, clienteData)
+        .subscribe({
+          next: () => {
+            this.cargando = false;
+            this.guardado.emit();
+            this.cerrarModal();
+          },
+          error: (err) => {
+            this.cargando = false;
+            this.errorMsg = err?.error?.message || 'Error al guardar';
+          },
+        });
+    } else {
+      // Modo nuevo
+      this.clienteService.crearCliente(clienteData).subscribe({
+        next: () => {
+          this.cargando = false;
+          this.guardado.emit();
+          this.cerrarModal();
+        },
+        error: (err) => {
+          this.cargando = false;
+          this.errorMsg = err?.error?.message || 'Error al guardar';
+        },
+      });
+    }
   }
+
+  generarNombreDisponible(): string {
+    const usados = this.clientes
+      .map((c) => c.nombre)
+      .filter((n) => /^Cliente \d+$/.test(n))
+      .map((n) => parseInt(n.split(' ')[1]))
+      .sort((a, b) => a - b);
+
+    let siguiente = 1;
+    for (let i = 0; i < usados.length; i++) {
+      if (usados[i] !== siguiente) break;
+      siguiente++;
+    }
+
+    return `Cliente ${siguiente}`;
+  }
+
   generarClaveAleatoria(): string {
     const caracteres =
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

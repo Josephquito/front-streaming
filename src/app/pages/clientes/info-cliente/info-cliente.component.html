@@ -1,0 +1,110 @@
+<div class="p-4">
+  <h2 class="text-xl font-bold mb-4">Información del Cliente</h2>
+
+  <div *ngIf="cargando" class="text-center text-gray-500">Cargando...</div>
+
+  <div *ngIf="historial && !cargando">
+    <!-- Info general -->
+    <div class="mb-6 bg-base-100 shadow rounded p-4 border">
+      <p><strong>Nombre:</strong> {{ historial.cliente.nombre }}</p>
+      <p>
+        <strong>Teléfono:</strong>
+        {{ historial.cliente.contacto || "Sin número" }}
+      </p>
+      <p><strong>Clave:</strong> {{ historial.cliente.clave }}</p>
+      <p>
+        <strong>Fecha de registro:</strong>
+        {{ historial.cliente.fecha_creacion | date : "short" }}
+      </p>
+    </div>
+
+    <!-- Perfiles Activos -->
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold mb-2">Perfiles Activos</h3>
+      <div *ngIf="historial.perfilesActivos.length > 0; else sinActivos">
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>#</th>
+
+                <th>Plataforma</th>
+                <th>Correo</th>
+                <th>Fecha Venta</th>
+                <th>Fecha Corte</th>
+                <th>Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let perfil of historial.perfilesActivos; let i = index"
+              >
+                <td>{{ i + 1 }}</td>
+                <td>
+                  {{
+                    perfil.cuenta?.plataforma?.nombre ||
+                      perfil.plataforma_asignada ||
+                      "Cuenta eliminada"
+                  }}
+                </td>
+                <td>
+                  {{
+                    perfil.cuenta?.correo ||
+                      perfil.correo_asignado ||
+                      "Cuenta eliminada"
+                  }}
+                </td>
+
+                <td>{{ formatearFecha(perfil.fecha_venta) }}</td>
+                <td>{{ formatearFecha(perfil.fecha_corte) }}</td>
+                <td>$ {{ perfil.precio }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <ng-template #sinActivos>
+        <p class="text-gray-500">No tiene perfiles activos.</p>
+      </ng-template>
+    </div>
+
+    <!-- Historial -->
+    <div>
+      <h3 class="text-lg font-semibold mb-2">Historial de Perfiles</h3>
+      <div *ngIf="historial.historialPerfiles.length > 0; else sinHistorial">
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Plataforma</th>
+                <th>Correo</th>
+                <th>Fecha Venta</th>
+                <th>Fecha de Baja</th>
+                <th>Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="
+                  let perfil of historial.historialPerfiles;
+                  let i = index
+                "
+              >
+                <td>{{ i + 1 }}</td>
+                <td>{{ perfil.plataforma_asignada }}</td>
+                <td>{{ perfil.correo_asignado }}</td>
+                <td>{{ formatearFecha(perfil.fecha_venta) }}</td>
+                <td>{{ formatearFecha(perfil.fecha_baja) }}</td>
+                <td>$ {{ perfil.precio }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <ng-template #sinHistorial>
+        <p class="text-gray-500">No hay historial disponible.</p>
+      </ng-template>
+    </div>
+  </div>
+</div>

@@ -90,6 +90,13 @@ export const routes: Routes = [
     path: 'finanzas/kardex/:plataformaId',
     component: TablaKardexComponent,
   },
+  {
+    path: 'clientes/:id',
+    loadComponent: () =>
+      import('./pages/clientes/info-cliente/info-cliente.component').then(
+        (m) => m.InfoClienteComponent
+      ),
+  },
 
   // Ruta wildcard opcional para rutas no existentes
   { path: '**', redirectTo: 'login' },

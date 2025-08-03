@@ -8,7 +8,9 @@
     <button class="absolute top-2 right-2 text-xl" (click)="cerrarModal()">
       ✖
     </button>
-    <h2 class="text-lg font-bold mb-4">Agregar nuevo cliente</h2>
+    <h2 class="text-lg font-bold mb-4">
+      {{ clienteEditar ? "Editar cliente" : "Agregar nuevo cliente" }}
+    </h2>
 
     <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-4">
       <div>
@@ -61,13 +63,6 @@
         Este número ya está registrado.
       </div>
 
-      <div
-        class="text-sm text-red-500"
-        *ngIf="form.get('contacto')?.errors?.['pattern'] && form.get('contacto')?.touched"
-      >
-        Número inválido. Debe comenzar con "+" seguido de 9 a 15 dígitos.
-      </div>
-
       <div *ngIf="errorMsg" class="text-red-500 text-sm">{{ errorMsg }}</div>
 
       <div class="flex justify-end gap-2 mt-4">
@@ -75,7 +70,15 @@
           Cancelar
         </button>
         <button class="btn btn-primary" [disabled]="cargando || form.invalid">
-          {{ cargando ? "Guardando..." : "Guardar" }}
+          {{
+            cargando
+              ? clienteEditar
+                ? "Actualizando..."
+                : "Guardando..."
+              : clienteEditar
+              ? "Actualizar"
+              : "Guardar"
+          }}
         </button>
       </div>
     </form>
