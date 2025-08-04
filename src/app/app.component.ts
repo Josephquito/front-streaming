@@ -7,10 +7,12 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule], // 👈 Aquí importas RouterModule
+  imports: [CommonModule, RouterModule],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
+  mostrarDropdown = false;
+
   constructor(private auth: AuthService, private router: Router) {}
 
   get isLoggedIn(): boolean {
@@ -27,6 +29,14 @@ export class AppComponent {
 
   get isEmpleado(): boolean {
     return this.auth.getRole()?.toLowerCase() === 'empleado';
+  }
+
+  toggleDropdown() {
+    this.mostrarDropdown = !this.mostrarDropdown;
+  }
+
+  cerrarDropdown() {
+    this.mostrarDropdown = false;
   }
 
   logout() {
