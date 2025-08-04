@@ -6,7 +6,7 @@
   </div>
 
   <!-- 🔒 Detalles completos de la cuenta solo para admins -->
-  <div *ngIf="isAdmin" class="border rounded-lg p-4 mb-6 bg-base-100 shadow">
+  <div class="border rounded-lg p-4 mb-6 bg-base-100 shadow">
     <h3 class="text-lg font-semibold mb-2">
       {{ cuentaSeleccionada.plataforma?.nombre | uppercase }}:
       {{ cuentaSeleccionada.correo }}

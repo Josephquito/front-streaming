@@ -1,78 +1,112 @@
-<div class="p-4">
-  <h2 class="text-xl font-bold mb-4">Información del Cliente</h2>
-
+<div class="p-6">
+  <!-- Estado de carga -->
   <div *ngIf="cargando" class="text-center text-gray-500">Cargando...</div>
 
-  <div *ngIf="historial && !cargando">
-    <!-- Info general -->
-    <div class="mb-6 bg-base-100 shadow rounded p-4 border">
-      <p><strong>Nombre:</strong> {{ historial.cliente.nombre }}</p>
-      <p>
-        <strong>Teléfono:</strong>
-        {{ historial.cliente.contacto || "Sin número" }}
-      </p>
-      <p><strong>Clave:</strong> {{ historial.cliente.clave }}</p>
-      <p>
-        <strong>Fecha de registro:</strong>
-        {{ historial.cliente.fecha_creacion | date : "short" }}
-      </p>
-    </div>
+  <!-- Contenido principal -->
+  <div
+    *ngIf="historial && !cargando"
+    class="grid grid-cols-1 lg:grid-cols-2 gap-6"
+  >
+    <!-- COLUMNA 1 -->
+    <div class="space-y-6">
+      <!-- Encabezado: nombre + datos -->
+      <div class="flex justify-between items-start mb-6">
+        <!-- Columna izquierda: Nombre + fecha -->
+        <div>
+          <button
+            class="flex items-center gap-2 text-3xl font-bold capitalize hover:underline"
+            (click)="abrirModalEditar(historial.cliente)"
+          >
+            {{ historial.cliente.nombre }}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5 text-gray-600 hover:text-black"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"
+              />
+              <path
+                fill-rule="evenodd"
+                d="M2 15.5A1.5 1.5 0 003.5 17h13a.5.5 0 000-1h-13a.5.5 0 01-.5-.5v-13a.5.5 0 00-1 0v13z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
+          <p class="text-gray-500 text-lg">
+            Registrado el
+            {{ historial.cliente.fecha_creacion | date : "shortDate" }}
+          </p>
+        </div>
 
-    <!-- Perfiles Activos -->
-    <div class="mb-6">
-      <h3 class="text-lg font-semibold mb-2">Perfiles Activos</h3>
-      <div *ngIf="historial.perfilesActivos.length > 0; else sinActivos">
-        <div class="overflow-x-auto border rounded-lg">
-          <table class="table table-zebra w-full">
-            <thead>
-              <tr>
-                <th>#</th>
-
-                <th>Plataforma</th>
-                <th>Correo</th>
-                <th>Fecha Venta</th>
-                <th>Fecha Corte</th>
-                <th>Precio</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                *ngFor="let perfil of historial.perfilesActivos; let i = index"
-              >
-                <td>{{ i + 1 }}</td>
-                <td>
-                  {{
-                    perfil.cuenta?.plataforma?.nombre ||
-                      perfil.plataforma_asignada ||
-                      "Cuenta eliminada"
-                  }}
-                </td>
-                <td>
-                  {{
-                    perfil.cuenta?.correo ||
-                      perfil.correo_asignado ||
-                      "Cuenta eliminada"
-                  }}
-                </td>
-
-                <td>{{ formatearFecha(perfil.fecha_venta) }}</td>
-                <td>{{ formatearFecha(perfil.fecha_corte) }}</td>
-                <td>$ {{ perfil.precio }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Columna derecha: info -->
+        <div class="text-right text-gray-700 text-lg leading-tight">
+          <p>
+            <strong>Teléfono:</strong>
+            {{ historial.cliente.contacto || "Sin número" }}
+          </p>
+          <p><strong>Clave:</strong> {{ historial.cliente.clave }}</p>
         </div>
       </div>
-      <ng-template #sinActivos>
-        <p class="text-gray-500">No tiene perfiles activos.</p>
-      </ng-template>
+
+      <!-- Perfiles Activos -->
+      <div>
+        <h3 class="text-lg font-semibold mb-2">Perfiles Activos</h3>
+        <div *ngIf="historial.perfilesActivos.length > 0; else sinActivos">
+          <div class="overflow-x-auto border rounded-xl shadow">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Plataforma</th>
+                  <th>Correo</th>
+                  <th>Fecha Venta</th>
+                  <th>Fecha Corte</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="
+                    let perfil of historial.perfilesActivos;
+                    let i = index
+                  "
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td>
+                    {{
+                      perfil.cuenta?.plataforma?.nombre ||
+                        perfil.plataforma_asignada ||
+                        "Cuenta eliminada"
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      perfil.cuenta?.correo ||
+                        perfil.correo_asignado ||
+                        "Cuenta eliminada"
+                    }}
+                  </td>
+                  <td>{{ formatearFecha(perfil.fecha_venta) }}</td>
+                  <td>{{ formatearFecha(perfil.fecha_corte) }}</td>
+                  <td>$ {{ perfil.precio }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <ng-template #sinActivos>
+          <p class="text-gray-500">No tiene perfiles activos.</p>
+        </ng-template>
+      </div>
     </div>
 
-    <!-- Historial -->
+    <!-- COLUMNA 2 -->
     <div>
       <h3 class="text-lg font-semibold mb-2">Historial de Perfiles</h3>
       <div *ngIf="historial.historialPerfiles.length > 0; else sinHistorial">
-        <div class="overflow-x-auto border rounded-lg">
+        <div class="overflow-x-auto border rounded-xl shadow">
           <table class="table table-zebra w-full">
             <thead>
               <tr>
@@ -103,8 +137,16 @@
         </div>
       </div>
       <ng-template #sinHistorial>
-        <p class="text-gray-500">No hay historial disponible.</p>
+        <p class="text-gray-500">No existe cuentas inactivas.</p>
       </ng-template>
     </div>
   </div>
 </div>
+
+<app-modal-nuevo-cliente
+  *ngIf="mostrarModalCliente"
+  [clientes]="[]"
+  [clienteEditar]="clienteEditar"
+  (cerrar)="cerrarModalCliente()"
+  (guardado)="recargarCliente()"
+></app-modal-nuevo-cliente>

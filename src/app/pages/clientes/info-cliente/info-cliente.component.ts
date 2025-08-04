@@ -7,11 +7,13 @@ import {
 } from '../../../services/cliente.service';
 import { CommonModule } from '@angular/common';
 import dayjs from 'dayjs';
+import { ModalNuevoClienteComponent } from '../modal/modal-nuevo-cliente.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   standalone: true,
   selector: 'app-info-cliente',
-  imports: [CommonModule],
+  imports: [CommonModule, ModalNuevoClienteComponent, FormsModule],
   templateUrl: './info-cliente.component.html',
 })
 export class InfoClienteComponent implements OnInit {
@@ -45,5 +47,26 @@ export class InfoClienteComponent implements OnInit {
 
   formatearFecha(fecha?: string): string {
     return fecha ? dayjs(fecha).format('D/M/YYYY') : '-';
+  }
+
+  mostrarModalCliente = false;
+  clienteEditar: any = null;
+
+  abrirModalEditar(cliente: any) {
+    this.clienteEditar = cliente;
+    this.mostrarModalCliente = true;
+  }
+
+  cerrarModalCliente() {
+    this.mostrarModalCliente = false;
+    this.clienteEditar = null;
+  }
+
+  recargarCliente() {
+    const id = this.historial?.cliente?.id;
+    if (id) {
+      this.cargando = true;
+      this.cargarHistorial(id);
+    }
   }
 }

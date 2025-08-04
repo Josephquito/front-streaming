@@ -1,0 +1,84 @@
+<div class="p-4">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold">Empleados</h2>
+    <button class="btn btn-primary" (click)="abrirModalCrear()">
+      + Añadir empleado
+    </button>
+  </div>
+
+  <!-- Empleados Activos -->
+  <h2 class="text-xl font-bold mb-2">Empleados Activos</h2>
+  <table class="table w-full mb-8">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Teléfono</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let emp of empleadosActivos">
+        <td>{{ emp.nombre }} {{ emp.apellido }}</td>
+        <td>{{ emp.correo }}</td>
+        <td>{{ emp.telefono }}</td>
+        <td>{{ emp.rol }}</td>
+        <td>
+          <ng-container *ngIf="emp.rol !== 'admin'; else sinAcciones">
+            <button
+              (click)="abrirModalEditar(emp)"
+              class="btn btn-sm btn-primary"
+            >
+              Editar
+            </button>
+            <button
+              (click)="eliminarEmpleado(emp.id)"
+              class="btn btn-sm btn-error ml-2"
+            >
+              Eliminar
+            </button>
+          </ng-container>
+          <ng-template #sinAcciones>—</ng-template>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Empleados Eliminados -->
+  <h2 class="text-xl font-bold mb-2 text-gray-500">Empleados Eliminados</h2>
+  <table class="table w-full text-gray-500">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Teléfono</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let emp of empleadosInactivos">
+        <td>{{ emp.nombre }} {{ emp.apellido }}</td>
+        <td>{{ emp.correo }}</td>
+        <td>{{ emp.telefono }}</td>
+        <td>{{ emp.rol }}</td>
+        <td>
+          <button
+            (click)="reactivarEmpleado(emp.id)"
+            class="btn btn-sm btn-success"
+          >
+            Reactivar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Modal Empleados -->
+  <app-modal-empleados
+    *ngIf="mostrarModal"
+    [empleado]="empleadoSeleccionado"
+    (cerrar)="cerrarModal($event)"
+  ></app-modal-empleados>
+</div>

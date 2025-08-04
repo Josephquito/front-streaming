@@ -1,0 +1,61 @@
+<div
+  class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h3 class="text-lg font-bold mb-4">
+      {{ empleado ? "Editar empleado" : "Crear nuevo empleado" }}
+    </h3>
+
+    <form (ngSubmit)="guardar()" class="space-y-4">
+      <input
+        type="text"
+        class="input input-bordered w-full"
+        placeholder="Nombre"
+        [(ngModel)]="datos.nombre"
+        name="nombre"
+        required
+      />
+      <input
+        type="text"
+        class="input input-bordered w-full"
+        placeholder="Apellido"
+        [(ngModel)]="datos.apellido"
+        name="apellido"
+        required
+      />
+      <input
+        type="email"
+        class="input input-bordered w-full"
+        placeholder="Correo"
+        [(ngModel)]="datos.correo"
+        name="correo"
+        required
+      />
+      <input
+        *ngIf="!empleado"
+        type="password"
+        class="input input-bordered w-full"
+        placeholder="Clave"
+        [(ngModel)]="datos.clave"
+        name="clave"
+        required
+      />
+      <input
+        type="text"
+        class="input input-bordered w-full"
+        placeholder="Teléfono"
+        [(ngModel)]="datos.telefono"
+        name="telefono"
+      />
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button type="button" class="btn" (click)="cerrarModal()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {{ empleado ? "Actualizar" : "Guardar" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

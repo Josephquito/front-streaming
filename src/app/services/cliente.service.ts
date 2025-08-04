@@ -10,6 +10,7 @@ export interface Cliente {
   contacto?: string;
   clave?: string;
   fecha_creacion?: string;
+  perfiles_activas?: any[];
 }
 
 export interface Cuenta {

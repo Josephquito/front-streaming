@@ -75,7 +75,7 @@
               <td>{{ cliente.nombre || "Sin nombre" }}</td>
               <td>{{ cliente.contacto || "Sin número" }}</td>
               <td>{{ cliente.clave }}</td>
-              <td>{{ cliente.cuentas_activas?.length || 0 }}</td>
+              <td>{{ cliente.perfiles_activas?.length }}</td>
               <td
                 class="text-right relative z-10"
                 (click)="$event.stopPropagation()"
@@ -138,7 +138,8 @@
               <td>{{ cliente.nombre }}</td>
               <td>{{ cliente.contacto }}</td>
               <td>{{ cliente.clave }}</td>
-              <td>{{ cliente.cuentas_activas?.length || 0 }}</td>
+              <td>{{ cliente.perfiles_activas?.length }}</td>
+
               <td
                 class="text-right relative z-10"
                 (click)="$event.stopPropagation()"
