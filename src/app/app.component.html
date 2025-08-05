@@ -47,7 +47,9 @@
       </ng-container>
 
       <ng-container *ngIf="isLoggedIn">
-        <li><a routerLink="/inicio" (click)="cerrarDropdown()">Inicio</a></li>
+        <li *ngIf="isLoggedIn && !isSuperAdmin">
+          <a routerLink="/inicio" (click)="cerrarDropdown()">Inicio</a>
+        </li>
         <li *ngIf="isAdmin || isEmpleado">
           <a routerLink="/cuentas" (click)="cerrarDropdown()">Cuentas</a>
         </li>
@@ -94,7 +96,7 @@
       </ng-container>
 
       <ng-container *ngIf="isLoggedIn">
-        <li *ngIf="isLoggedIn">
+        <li *ngIf="isLoggedIn && !isSuperAdmin">
           <a routerLink="/inicio">Inicio</a>
         </li>
         <li *ngIf="isAdmin || isEmpleado">

@@ -19,7 +19,7 @@ export const routes: Routes = [
   // Inicio
   {
     path: 'inicio',
-    canActivate: [authGuard],
+    canActivate: [adminOempleadoGuard],
     loadComponent: () =>
       import('./pages/inicio/inicio.component').then((m) => m.InicioComponent),
   },

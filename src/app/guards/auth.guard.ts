@@ -7,13 +7,28 @@ export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  const currentUrl = route.url.map((segment) => segment.path).join('/');
+  const currentPath = route.routeConfig?.path ?? '';
 
-  // Si va a /login y ya está autenticado → redirigir a /inicio
-  if (currentUrl === 'login') {
-    return auth.isAuthenticated() ? router.parseUrl('/inicio') : true;
+  const role = auth.getRole(); // 'admin', 'empleado', 'superadmin'
+
+  // Si va a /login y ya está autenticado → redirigir según rol
+  if (currentPath === 'login') {
+    if (!auth.isAuthenticated()) return true;
+
+    if (role === 'superadmin') return router.parseUrl('/admins');
+    return router.parseUrl('/inicio');
   }
 
-  // Para cualquier otra ruta → permitir solo si está autenticado
-  return auth.isAuthenticated() ? true : router.parseUrl('/login');
+  // Si no está autenticado → redirigir a /login
+  if (!auth.isAuthenticated()) {
+    return router.parseUrl('/login');
+  }
+
+  // Si es superadmin y trata de ir a /inicio → redirigir a /admins
+  if (role === 'superadmin' && currentPath === 'inicio') {
+    return router.parseUrl('/admins');
+  }
+
+  // Si pasa todas las validaciones
+  return true;
 };
