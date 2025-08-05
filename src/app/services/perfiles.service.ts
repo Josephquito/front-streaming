@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpHeaders } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 export interface Perfil {
   id: number;
@@ -22,7 +23,7 @@ export interface Perfil {
 
 @Injectable({ providedIn: 'root' })
 export class PerfilService {
-  private apiUrl = 'http://localhost:3000/perfiles';
+  private apiUrl = `${environment.apiUrl}/perfiles`;
 
   constructor(private http: HttpClient) {}
 
