@@ -1,4 +1,4 @@
-//src/app/services/cuentas.service.ts
+// src/app/services/cuentas.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -21,6 +21,13 @@ export interface Cuenta {
     nombre: string;
     color: string | null;
   };
+}
+
+// 👇 Añade esta interfaz
+export interface RenovarPayload {
+  fecha_compra: string; // 'YYYY-MM-DD'
+  tiempo_asignado: string; // '1 mes' | '30 dias' | etc.
+  costo_total: number | string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -46,5 +53,21 @@ export class CuentasService {
     const token = this.auth.getToken();
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
     return this.http.patch(`${this.apiUrl}/${id}`, datos, { headers });
+  }
+
+  // ✅ Nuevo: RENOVAR (usa el endpoint /cuentas/:id/renovar)
+  renovarCuenta(id: number, datos: RenovarPayload): Observable<Cuenta> {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    const payload = {
+      fecha_compra: datos.fecha_compra,
+      tiempo_asignado: datos.tiempo_asignado,
+      costo_total: Number(datos.costo_total), // el backend espera number
+    };
+
+    return this.http.patch<Cuenta>(`${this.apiUrl}/${id}/renovar`, payload, {
+      headers,
+    });
   }
 }

@@ -369,13 +369,59 @@
           />
         </div>
       </div>
+      <label class="block text-sm font-medium mb-2">Tiempo asignado</label>
 
-      <!-- Tiempo asignado -->
-      <input
-        [(ngModel)]="nuevaCuenta.tiempo_asignado"
-        placeholder="Tiempo Ej: 1 mes"
-        class="input input-bordered w-full"
-      />
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Botones preset -->
+        <div class="btn-group">
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-active]="tiempoPreset === '1m'"
+            (click)="setPreset('1m')"
+          >
+            1 mes
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-active]="tiempoPreset === '3m'"
+            (click)="setPreset('3m')"
+          >
+            3 meses
+          </button>
+          <button
+            type="button"
+            class="btn btn-sm"
+            [class.btn-active]="tiempoPreset === '6m'"
+            (click)="setPreset('6m')"
+          >
+            6 meses
+          </button>
+        </div>
+
+        <!-- Input N días (si el usuario escribe, sobreescribe lo anterior) -->
+        <div class="flex items-center gap-2">
+          <input
+            type="number"
+            min="1"
+            class="input input-sm input-bordered w-28"
+            placeholder="N días"
+            [(ngModel)]="customDias"
+            (focus)="tiempoPreset = null"
+            (ngModelChange)="onCustomDiasChange()"
+          />
+          <span class="text-sm">días</span>
+        </div>
+      </div>
+
+      <!-- Texto informativo -->
+      <p class="text-xs text-gray-500 mt-2">
+        Se enviará:
+        <span class="font-semibold">{{
+          nuevaCuenta.tiempo_asignado || "—"
+        }}</span>
+      </p>
 
       <!-- Selector de plataforma -->
       <select

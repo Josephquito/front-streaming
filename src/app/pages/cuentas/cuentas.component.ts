@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -9,7 +9,11 @@ import {
 } from '../../services/plataformas.service';
 import { FormsModule } from '@angular/forms';
 import { HostListener, ElementRef, ViewChild } from '@angular/core';
-import { CuentasService } from '../../services/cuentas.service';
+import {
+  CuentasService,
+  Cuenta,
+  RenovarPayload,
+} from '../../services/cuentas.service';
 import { Router } from '@angular/router';
 import dayjs from 'dayjs';
 
@@ -19,10 +23,13 @@ import dayjs from 'dayjs';
   imports: [CommonModule, FormsModule],
   templateUrl: './cuentas.component.html',
 })
-export class CuentasComponent implements OnInit {
+export class CuentasComponent implements OnInit, OnDestroy {
   @ViewChild('menuOpciones') menuOpcionesRef!: ElementRef;
   mostrarOpciones = false;
   plataformas: Plataforma[] = [];
+
+  mostrarModalRenovar = false;
+  cuentaRenovar: any = {};
 
   mostrarModal = false;
   editandoId: number | null = null;
@@ -80,11 +87,6 @@ export class CuentasComponent implements OnInit {
   ngOnInit(): void {
     this.cargarPlataformas();
     this.cargarCuentas();
-
-    // Fecha actual para fecha_compra
-    const hoy = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
-    this.nuevaCuenta.fecha_compra = hoy;
-    window.addEventListener('click', this.cerrarDropdown.bind(this));
   }
 
   ngOnDestroy() {
@@ -343,8 +345,8 @@ export class CuentasComponent implements OnInit {
   abrirModalCuenta() {
     const hoy = new Date();
     const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, '0'); // Mes con 2 dígitos
-    const dd = String(hoy.getDate()).padStart(2, '0'); // Día con 2 dígitos
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
 
     this.nuevaCuenta = {
       correo: '',
@@ -352,10 +354,13 @@ export class CuentasComponent implements OnInit {
       costo_total: null,
       proveedor: '',
       numero_perfiles: null,
-      fecha_compra: `${yyyy}-${mm}-${dd}`, // formato compatible con input type="date"
+      fecha_compra: `${yyyy}-${mm}-${dd}`,
       tiempo_asignado: '',
       plataformaId: null,
     };
+
+    // ✅ importante: setear preset por defecto
+    this.inicializarTiempoAsignado();
 
     this.mostrarModalCuenta = true;
   }
@@ -597,18 +602,15 @@ export class CuentasComponent implements OnInit {
     return new Date().toISOString().split('T')[0];
   }
 
-  mostrarModalRenovar = false;
-  cuentaRenovar: any = {};
-
-  abrirModalRenovar(cuenta: any) {
+  abrirModalRenovar(cuenta: Cuenta) {
     this.cuentaRenovar = {
       id: cuenta.id,
-      fecha_compra: cuenta.fecha_compra?.split('T')[0] || this.hoyISO(),
-      costo_total: cuenta.costo_total,
+      fecha_compra:
+        (cuenta.fecha_compra || '').toString().slice(0, 10) || this.hoyISO(),
+      costo_total: cuenta.costo_total, // puede venir string; lo casteamos al enviar
       tiempo_asignado: cuenta.tiempo_asignado,
     };
-    this.mostrarModalRenovar = true;
-    this.cerrarDropdown(); // opcional
+    this.mostrarModalRenovar = true; // opcional si existe
   }
 
   cerrarModalRenovar() {
@@ -616,27 +618,70 @@ export class CuentasComponent implements OnInit {
   }
 
   guardarRenovacion() {
-    const token = this.auth.getToken();
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const payload: RenovarPayload = {
+      fecha_compra: this.cuentaRenovar.fecha_compra,
+      tiempo_asignado: this.cuentaRenovar.tiempo_asignado,
+      costo_total: Number(this.cuentaRenovar.costo_total), // backend espera number
+    };
 
-    this.http
-      .patch(
-        `${environment.apiUrl}/cuentas/${this.cuentaRenovar.id}`,
-        {
-          fecha_compra: this.cuentaRenovar.fecha_compra,
-          costo_total: this.cuentaRenovar.costo_total,
-          tiempo_asignado: this.cuentaRenovar.tiempo_asignado,
-        },
-        { headers }
-      )
+    if (
+      !payload.fecha_compra ||
+      !payload.tiempo_asignado ||
+      isNaN(Number(payload.costo_total))
+    ) {
+      alert('Completa fecha_compra, tiempo_asignado y costo_total numérico.');
+      return;
+    }
+
+    this.cuentasService
+      .renovarCuenta(this.cuentaRenovar.id, payload)
       .subscribe({
         next: () => {
-          this.cargarCuentas();
+          this.cargarCuentas?.();
           this.cerrarModalRenovar();
         },
         error: (err) => {
           alert(err?.error?.message || 'Error al renovar la cuenta');
         },
       });
+  }
+
+  tiempoPreset: '1m' | '3m' | '6m' | null = '1m';
+  customDias: number | null = null;
+
+  inicializarTiempoAsignado() {
+    this.tiempoPreset = '1m';
+    this.customDias = null;
+    this.nuevaCuenta.tiempo_asignado = '1 mes';
+  }
+
+  setPreset(preset: '1m' | '3m' | '6m') {
+    this.tiempoPreset = preset;
+    this.customDias = null; // limpia input
+
+    switch (preset) {
+      case '1m':
+        this.nuevaCuenta.tiempo_asignado = '1 mes';
+        break;
+      case '3m':
+        this.nuevaCuenta.tiempo_asignado = '3 meses';
+        break;
+      case '6m':
+        this.nuevaCuenta.tiempo_asignado = '6 meses';
+        break;
+    }
+  }
+
+  onCustomDiasChange() {
+    const n = Number(this.customDias);
+    if (n > 0) {
+      this.tiempoPreset = null; // desactiva botones
+      this.nuevaCuenta.tiempo_asignado = `${n} dias`;
+    } else if (this.tiempoPreset) {
+      // si no hay días pero hay preset, mantenlo
+      this.setPreset(this.tiempoPreset);
+    } else {
+      this.nuevaCuenta.tiempo_asignado = '';
+    }
   }
 }

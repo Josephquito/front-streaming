@@ -11,280 +11,265 @@
       {{ cuentaSeleccionada.plataforma?.nombre | uppercase }}:
       {{ cuentaSeleccionada.correo }}
     </h3>
-    <div class="grid grid-cols-2 gap-4 text-sm">
-      <div><strong>Clave:</strong> {{ cuentaSeleccionada.clave }}</div>
-      <div><strong>Proveedor:</strong> {{ cuentaSeleccionada.proveedor }}</div>
-      <div>
-        <strong>Fecha de compra:</strong> {{ cuentaSeleccionada.fecha_compra }}
-      </div>
-      <div>
-        <strong>Fecha de corte:</strong> {{ cuentaSeleccionada.fecha_corte }}
-      </div>
-    </div>
 
-    <!-- Tabla de perfiles -->
-    <div class="overflow-x-auto border rounded-lg p-4 mb-6 bg-base-100 shadow">
-      <table class="table table-zebra w-full">
+    <!-- Tabla de perfiles (estilo igual al módulo de cuentas) -->
+    <div class="overflow-x-auto">
+      <table class="table w-full relative z-0">
         <thead>
-          <tr>
-            <th>#</th>
+          <tr class="bg-base-200 text-left text-sm">
+            <th>Perfil</th>
             <th>Cliente</th>
-            <th>Fecha Venta</th>
+            <th>Queda</th>
+            <th>Fecha venta</th>
             <th>Tiempo</th>
             <th>Corte</th>
             <th>Precio</th>
-            <th>Costo</th>
-            <th>Ganancia</th>
-            <th></th>
+            <th class="text-right">Más</th>
           </tr>
         </thead>
+
         <tbody>
-          <ng-container *ngFor="let perfil of perfiles; let idx = index">
-            <tr>
-              <!-- Número de perfil -->
-              <td class="font-bold">P{{ idx + 1 }}</td>
+          <!-- Una sola lista de slots fijos -->
+          <tr
+            *ngFor="let slot of slots"
+            class="cursor-pointer transition duration-150 ease-in-out hover:bg-base-200"
+          >
+            <!-- Número fijo -->
+            <td class="font-medium">P{{ slot.pos }}</td>
 
-              <!-- Si existe un perfil -->
-              <td>{{ perfil?.cliente?.nombre || "-" }}</td>
-
-              <!-- Fecha venta -->
-              <td>
-                <input
-                  *ngIf="editandoId === perfil.id"
-                  type="date"
-                  class="input input-sm w-full"
-                  [(ngModel)]="perfilEditado.fecha_venta"
-                />
-                <span *ngIf="editandoId !== perfil.id">{{
-                  perfil.fecha_venta
-                }}</span>
+            <!-- Si el slot tiene perfil -->
+            <ng-container *ngIf="slot.perfil; else slotVacio">
+              <td class="uppercase font-semibold">
+                {{ slot.perfil?.cliente?.nombre || "—" }}
               </td>
 
-              <!-- Tiempo -->
               <td>
-                <input
-                  *ngIf="editandoId === perfil.id"
-                  type="text"
-                  class="input input-sm w-full"
-                  [(ngModel)]="perfilEditado.tiempo_asignado"
-                />
-                <span *ngIf="editandoId !== perfil.id">{{
-                  perfil.tiempo_asignado
-                }}</span>
-              </td>
-
-              <!-- Corte -->
-              <td>{{ perfil.fecha_corte }}</td>
-
-              <!-- Precio -->
-              <td>
-                <input
-                  *ngIf="editandoId === perfil.id"
-                  type="number"
-                  step="0.01"
-                  class="input input-sm w-full"
-                  [(ngModel)]="perfilEditado.precio"
-                />
-                <span *ngIf="editandoId !== perfil.id"
-                  >${{ perfil.precio }}</span
+                <span
+                  class="font-semibold"
+                  [ngClass]="{
+                    'text-gray-400':
+                      !slot.perfil?.fecha_corte ||
+                      slot.perfil?.activo === false,
+                    'text-red-600':
+                      diasRestantes(slot.perfil?.fecha_corte) <= 3 &&
+                      slot.perfil?.activo !== false,
+                    'text-yellow-600':
+                      diasRestantes(slot.perfil?.fecha_corte) > 3 &&
+                      diasRestantes(slot.perfil?.fecha_corte) <= 7 &&
+                      slot.perfil?.activo !== false,
+                    'text-green-600':
+                      diasRestantes(slot.perfil?.fecha_corte) > 7 &&
+                      slot.perfil?.activo !== false
+                  }"
                 >
+                  {{
+                    slot.perfil?.activo === false || !slot.perfil?.fecha_corte
+                      ? "—"
+                      : diasRestantes(slot.perfil?.fecha_corte) + " días"
+                  }}
+                </span>
               </td>
 
-              <!-- Costo -->
-              <td>${{ perfil.costo }}</td>
+              <td>{{ slot.perfil?.fecha_venta || "—" }}</td>
+              <td>{{ slot.perfil?.tiempo_asignado || "—" }}</td>
+              <td>{{ slot.perfil?.fecha_corte || "—" }}</td>
 
-              <!-- Ganancia -->
-              <td>${{ perfil.ganancia }}</td>
-
-              <!-- Acciones -->
-              <td class="whitespace-nowrap space-x-1">
-                <ng-container
-                  *ngIf="editandoId === perfil.id; else botonesNormales"
-                >
-                  <button
-                    class="btn btn-sm btn-success"
-                    (click)="guardarCambios(perfil)"
-                  >
-                    💾
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline"
-                    (click)="cancelarEdicion()"
-                  >
-                    ❌
-                  </button>
-                </ng-container>
-                <ng-template #botonesNormales>
-                  <button
-                    class="btn btn-sm btn-outline"
-                    (click)="iniciarEdicion(perfil.id)"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline text-red-600"
-                    (click)="eliminarPerfil(perfil.id)"
-                  >
-                    🗑️
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline"
-                    (click)="copiarPlantilla(perfil, idx)"
-                    title="Copiar"
-                    *ngIf="perfil.cliente"
-                  >
-                    <ng-container
-                      *ngIf="copiadoIdx === idx; else iconoPorDefecto"
-                    >
-                      ✅
-                    </ng-container>
-                    <ng-template #iconoPorDefecto>📋</ng-template>
-                  </button>
-                </ng-template>
+              <td>
+                {{
+                  slot.perfil?.precio != null
+                    ? "$" + (slot.perfil?.precio | number : "1.2-2")
+                    : "—"
+                }}
               </td>
-            </tr>
-          </ng-container>
 
-          <!-- Espacios libres -->
-          <ng-container *ngFor="let i of espaciosLibres; let idx = index">
-            <tr>
-              <td class="font-bold">P{{ perfiles.length + idx + 1 }}</td>
-              <td colspan="7" class="text-center text-gray-400">
-                <ng-container
-                  *ngIf="
-                    filaSeleccionada === perfiles.length + idx;
-                    else mostrarBoton
+              <td class="text-right relative z-10">
+                <button
+                  class="btn btn-sm btn-ghost btn-circle"
+                  (click)="
+                    toggleDropdownPerfil($event, slot.perfil.id, slot.perfil)
                   "
                 >
-                  <div class="grid grid-cols-4 gap-2">
-                    <select
-                      class="select select-bordered w-full"
-                      [(ngModel)]="nuevoPerfil.clienteId"
-                    >
-                      <option [ngValue]="0" disabled selected>Cliente</option>
-                      <option
-                        *ngFor="let cliente of clientes"
-                        [value]="cliente.id"
-                      >
-                        {{ cliente.nombre }}
-                      </option>
-                    </select>
-                    <input
-                      type="date"
-                      class="input input-bordered"
-                      [(ngModel)]="nuevoPerfil.fecha_venta"
-                    />
-                    <input
-                      type="text"
-                      class="input input-bordered"
-                      [(ngModel)]="nuevoPerfil.tiempo_asignado"
-                      placeholder="1 mes"
-                    />
-                    <input
-                      type="number"
-                      class="input input-bordered"
-                      [(ngModel)]="nuevoPerfil.precio"
-                      placeholder="Precio $$"
-                    />
-                  </div>
-                  <div class="mt-2 flex justify-center gap-2">
-                    <button
-                      class="btn btn-sm btn-success"
-                      (click)="registrarPerfil()"
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      class="btn btn-sm btn-outline"
-                      (click)="filaSeleccionada = null"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </ng-container>
-                <ng-template #mostrarBoton>
-                  <button
-                    class="btn btn-sm btn-outline btn-accent"
-                    (click)="abrirModal()"
-                  >
-                    + Vender
-                  </button>
-                </ng-template>
+                  ⋮
+                </button>
               </td>
-              <td></td>
-            </tr>
-          </ng-container>
+            </ng-container>
+
+            <!-- Si el slot está vacío -->
+            <ng-template #slotVacio>
+              <td class="text-gray-400">—</td>
+              <td class="text-gray-400">—</td>
+              <td class="text-gray-400">—</td>
+              <td class="text-gray-400">—</td>
+              <td class="text-gray-400">—</td>
+              <td class="text-gray-400">—</td>
+              <td class="text-right">
+                <button
+                  class="btn btn-sm btn-outline btn-accent"
+                  (click)="abrirModalVenderEnSlot(slot.pos)"
+                >
+                  + Vender
+                </button>
+              </td>
+            </ng-template>
+          </tr>
         </tbody>
       </table>
     </div>
-  </div>
-</div>
 
-<!-- Modal de venta de perfil -->
-<div
-  *ngIf="mostrarModalVender"
-  class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
->
-  <div
-    class="bg-white dark:bg-base-100 p-6 rounded-lg shadow-md w-full max-w-md"
-  >
-    <h2 class="text-lg font-semibold mb-4">Vender Perfil</h2>
+    <!-- Menú flotante para perfiles -->
+    <div
+      #menuPerfil
+      *ngIf="dropdownPerfilAbierto !== null"
+      class="fixed z-[9999] w-44 bg-white border rounded shadow-lg"
+      [ngStyle]="{
+        top: dropdownPerfilPosY + 'px',
+        left: dropdownPerfilPosX + 'px'
+      }"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        (click)="iniciarEdicion(selectedPerfil?.id); cerrarDropdownPerfil()"
+      >
+        Editar
+      </button>
 
-    <div class="grid grid-cols-1 gap-4">
-      <div class="relative w-full">
-        <input
-          type="text"
-          class="input input-bordered w-full"
-          placeholder="Cliente (nombre o numero)"
-          [(ngModel)]="busquedaCliente"
-          (input)="filtrarClientes()"
-          (focus)="mostrarListaClientes = true"
-          (blur)="ocultarListaClientes()"
-        />
+      <button
+        *ngIf="selectedPerfil?.activo !== false"
+        class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        (click)="eliminarPerfil(selectedPerfil?.id); cerrarDropdownPerfil()"
+      >
+        Vaciar
+      </button>
 
-        <ul
-          *ngIf="mostrarListaClientes && clientesFiltrados.length > 0"
-          class="absolute z-50 bg-white border w-full max-h-48 overflow-y-auto rounded shadow"
-        >
-          <li
-            *ngFor="let cliente of clientesFiltrados.slice(0, 2)"
-            (mousedown)="seleccionarCliente(cliente)"
-            class="p-2 hover:bg-gray-100 cursor-pointer"
-          >
-            {{ cliente.nombre }} ({{ cliente.contacto || "sin número" }})
-          </li>
-          <!-- ✅ bien cerrado -->
-        </ul>
-        <!-- ✅ bien cerrado -->
-      </div>
-      <!-- ✅ bien cerrado -->
-
-      <input
-        type="date"
-        class="input input-bordered w-full"
-        [(ngModel)]="nuevoPerfil.fecha_venta"
-      />
-      <input
-        type="text"
-        class="input input-bordered w-full"
-        [(ngModel)]="nuevoPerfil.tiempo_asignado"
-        placeholder="1 mes"
-      />
-      <input
-        type="number"
-        class="input input-bordered w-full"
-        [(ngModel)]="nuevoPerfil.precio"
-        placeholder="Precio Venta"
-      />
+      <button
+        *ngIf="selectedPerfil?.cliente"
+        class="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        (click)="
+          copiarPlantilla(selectedPerfil, perfiles.indexOf(selectedPerfil));
+          cerrarDropdownPerfil()
+        "
+      >
+        Copiar
+      </button>
     </div>
 
-    <div class="flex justify-end mt-4 gap-2">
-      <button class="btn btn-sm btn-success" (click)="registrarPerfil()">
-        Guardar
-      </button>
-      <button class="btn btn-sm btn-outline" (click)="cerrarModal()">
-        Cancelar
-      </button>
+    <!-- Modal de venta de perfil -->
+    <div
+      *ngIf="mostrarModalVender"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+    >
+      <div
+        class="bg-white dark:bg-base-100 p-6 rounded-lg shadow-md w-full max-w-md"
+      >
+        <h2 class="text-lg font-semibold mb-4">Vender Perfil</h2>
+
+        <div class="grid grid-cols-1 gap-4">
+          <div class="relative w-full">
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              placeholder="Cliente (nombre o numero)"
+              [(ngModel)]="busquedaCliente"
+              (input)="filtrarClientes()"
+              (focus)="mostrarListaClientes = true"
+              (blur)="ocultarListaClientes()"
+            />
+
+            <ul
+              *ngIf="mostrarListaClientes && clientesFiltrados.length > 0"
+              class="absolute z-50 bg-white border w-full max-h-48 overflow-y-auto rounded shadow"
+            >
+              <li
+                *ngFor="let cliente of clientesFiltrados.slice(0, 2)"
+                (mousedown)="seleccionarCliente(cliente)"
+                class="p-2 hover:bg-gray-100 cursor-pointer"
+              >
+                {{ cliente.nombre }} ({{ cliente.contacto || "sin número" }})
+              </li>
+              <!-- ✅ bien cerrado -->
+            </ul>
+            <!-- ✅ bien cerrado -->
+          </div>
+          <!-- ✅ bien cerrado -->
+
+          <input
+            type="date"
+            class="input input-bordered w-full"
+            [(ngModel)]="nuevoPerfil.fecha_venta"
+          />
+          <label class="block text-sm font-medium mb-2">Tiempo asignado</label>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Botones preset (mismo diseño) -->
+            <div class="btn-group">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-active]="tiempoPresetPerfil === '1m'"
+                (click)="setPresetPerfil('1m')"
+              >
+                1 mes
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-active]="tiempoPresetPerfil === '3m'"
+                (click)="setPresetPerfil('3m')"
+              >
+                3 meses
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-active]="tiempoPresetPerfil === '6m'"
+                (click)="setPresetPerfil('6m')"
+              >
+                6 meses
+              </button>
+            </div>
+
+            <!-- N días: si escribes, sobreescribe lo anterior -->
+            <div class="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                class="input input-sm input-bordered w-28"
+                placeholder="N días"
+                [(ngModel)]="customDiasPerfil"
+                (focus)="tiempoPresetPerfil = null"
+                (ngModelChange)="onCustomDiasChangePerfil()"
+              />
+              <span class="text-sm">días</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500 mt-2">
+            Se enviará:
+            <span class="font-semibold">{{
+              nuevoPerfil.tiempo_asignado || "—"
+            }}</span>
+          </p>
+
+          <input
+            type="number"
+            class="input input-bordered w-full"
+            [(ngModel)]="nuevoPerfil.precio"
+            placeholder="Precio Venta"
+          />
+        </div>
+
+        <div class="flex justify-end mt-4 gap-2">
+          <button class="btn btn-sm btn-success" (click)="registrarPerfil()">
+            Guardar
+          </button>
+          <button class="btn btn-sm btn-outline" (click)="cerrarModal()">
+            Cancelar
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
